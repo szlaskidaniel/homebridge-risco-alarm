@@ -1,6 +1,6 @@
 {
   "name": "homebridge-risco-alarm",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "RiscoAlarm Plugin for Homebridge",
   "dependencies": {
     "request": "^2.85.0",
