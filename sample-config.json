@@ -1,0 +1,11 @@
+{
+    "accessories": [
+        {
+            "accessory": "RiscoAlarm",
+            "name": "RiscoAlarm",
+            "riscoUsername": "",
+            "riscoPassword": "",
+            "riscoPIN": ""
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "homebridge-risco-alarm",
+  "version": "1.1.0",
+  "description": "RiscoAlarm Plugin for Homebridge",
+  "dependencies": {
+    "request": "^2.85.0",
+    "cookie": "^0.3.1"
+  },
+  
+  "engines": {
+    "homebridge": ">=0.2.0",
+    "node": ">=0.12.0"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "risco",
+    "alarm",
+    "homekit",
+    "homebridge",
+    "riscoCloud"
+  ],
+  "license": "ISC",
+  "main": "app.js",
+
+  "repository": {
+    "type": "npm",
+    "url": ""
+  },
+  "scripts": {
+    "start": "node app"
+  }
+
+}
