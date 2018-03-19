@@ -3,10 +3,10 @@
   "version": "1.1.2",
   "description": "RiscoAlarm Plugin for Homebridge",
   "dependencies": {
-    "request": "^2.85.0",
-    "cookie": "^0.3.1"
+    "cookie": "^0.3.1",
+    "polling-to-event": "^2.1.0",
+    "request": "^2.85.0"
   },
-  
   "engines": {
     "homebridge": ">=0.2.0",
     "node": ">=0.12.0"
@@ -21,7 +21,6 @@
   ],
   "license": "ISC",
   "main": "app.js",
-
   "repository": {
     "type": "git",
     "url": "https://github.com/szlaskidaniel/homebridge-risco-alarm"
@@ -29,5 +28,4 @@
   "scripts": {
     "start": "node app"
   }
-
 }

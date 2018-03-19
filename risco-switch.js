@@ -48,10 +48,14 @@ function login() {
 }
 
 
-function getState() {
+function getInitState() {
 
     return new Promise(function (resolve, reject) {
-        //self.log('> getState from RiscoCloud...')
+        self.log('> getState from RiscoCloud...');
+
+        //resolve(false);
+        //return;
+
         var post_data = {};
 
         var options = {
@@ -81,7 +85,7 @@ function getState() {
 
                 //console.log('No error, status: ', res.statusCode);
                 self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
-                self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
+                //self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
 
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
@@ -90,19 +94,17 @@ function getState() {
                 // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
                 //self.log(body);
 
-                if (body.OngoingAlarm == true) {
-                    riscoState = 4;
-                } else {
-                    try {
-                        var armedZones = body.overview.partInfo.armedStr.split(' ');
-                        if (parseInt(armedZones[0]) > 0) {
-                            riscoState = 1 // Armed
-                        } else
-                            riscoState = 3 // Disarmed
-                    } catch (error) {
-                        reject();
-                    }
+
+                try {
+                    var armedZones = body.overview.partInfo.armedStr.split(' ');
+                    if (parseInt(armedZones[0]) > 0) {
+                        riscoState = true // Armed
+                    } else
+                        riscoState = false // Disarmed
+                } catch (error) {
+                    reject();
                 }
+
 
                 resolve(riscoState);
             } else
@@ -110,13 +112,84 @@ function getState() {
         })
     })
 }
+/*
+function getState() {
 
+    return new Promise(function (resolve, reject) {
+        var post_data = {};
+
+        var options = {
+            url: 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState',
+            method: 'POST',
+            headers: {
+                "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
+                "Origin": "https://www.riscocloud.com",
+                "Cookie": riscoCookies
+            },
+            json: post_data
+        };
+
+        request(options, function (err, res, body) {
+            if (!err) {
+                // Check error inside JSON
+                try {
+                    if (body.error == 3) {
+                        // Error. Try to login first
+                        self.log('Error: 3. Session expired.');
+                        reject();
+                        return
+                    }
+                } catch (error) {
+
+                }
+
+                if (body.overview == null) {
+                    // No changes
+                    resolve(99);
+                    return
+                } else {
+                    self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
+                    self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
+
+                    var riscoState;
+                    // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
+                    // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
+                    // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+                    // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
+                    self.log(body);
+
+                    if (body.OngoingAlarm == true) {
+                        riscoState = 4;
+                    } else {
+                        try {
+                            var armedZones = body.overview.partInfo.armedStr.split(' ');
+                            if (parseInt(armedZones[0]) > 0) {
+                                riscoState = 1 // Armed
+                            } else
+                                riscoState = 3 // Disarmed
+                        } catch (error) {
+                            reject();
+                        }
+                    }
+
+
+                    resolve(riscoState);
+                }
+            } else
+                reject();
+        })
+    })
+}
+*/
 
 
 function arm(aState) {
 
-    //console.log('func: arm');
+    console.log('func: arm/disarm');
     return new Promise(function (resolve, reject) {
+
+        //resolve();
+        //return
 
         var targetType;
         var targetPasscode;
@@ -175,6 +248,7 @@ function arm(aState) {
 module.exports = {
     init,
     login,
-    getState,
+    getInitState,
+    // getState,
     arm
 };

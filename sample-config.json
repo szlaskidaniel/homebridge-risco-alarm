@@ -3,6 +3,8 @@
         {
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
+            "polling": true,
+            "pollinterval": 15,
             "riscoUsername": "",
             "riscoPassword": "",
             "riscoPIN": ""

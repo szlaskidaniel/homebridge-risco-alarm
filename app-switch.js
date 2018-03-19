@@ -1,4 +1,5 @@
 var Service, Characteristic;
+//var pollingtoevent = require("polling-to-event");
 
 var risco = require('./risco');
 
@@ -18,8 +19,46 @@ function RiscoSecuritySystemAccessory(log, config) {
 
     self = this;
 
-
     risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
+
+
+    // polling settings
+    /*
+    self.polling = config.polling;
+    self.pollInterval = config.pollInterval || 30000;
+
+    // set up polling if requested
+    //
+    // *** POLLING DISABLED as WAS NOT RELIABLE
+    //
+    if (self.polling) {
+        self.log("Starting polling with an interval of %s ms", self.pollInterval);
+        var emitter = pollingtoevent(function (done) {
+
+            self.getCurrentState(function (err, result) {
+                done(err, result);
+            });
+            self.getTargetState(function (err, result) {
+                done(err, result);
+            });
+
+
+        }, {
+            longpolling: true,
+            interval: self.pollInterval
+        });
+
+        emitter.on("longpoll", function (state) {
+            self.log("Polling noticed status change to %s, notifying devices", state);
+            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+
+        });
+
+        emitter.on("err", function (err) {
+            self.log("Polling failed, error was %s", err);
+        });
+    }
+    */
 
 }
 
@@ -55,30 +94,12 @@ function translateState(aState) {
 RiscoSecuritySystemAccessory.prototype = {
 
     setTargetState: function (state, callback) {
-        this.log("Setting state to %s", translateState(state));
+        this.log("Setting state to %s", state);
         var self = this;
-        switch (state) {
-            case Characteristic.SecuritySystemTargetState.STAY_ARM:
-                // stayArm = 0
-                riscoArm = true;
-                break;
-            case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-                // stayArm = 2
-                riscoArm = true;
-                break;
-            case Characteristic.SecuritySystemTargetState.AWAY_ARM:
-                // stayArm = 1
-                riscoArm = true;
-                break;
-            case Characteristic.SecuritySystemTargetState.DISARM:
-                // stayArm = 3
-                riscoArm = false
-                break;
 
-        };
+        risco.arm(state).then(function (resp) {
 
-        risco.arm(riscoArm).then(function (resp) {
-            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+            //self.securityService.setCharacteristic(Characteristic.On, state);
             callback(null, state);
 
         }).catch(function (error) {
@@ -88,8 +109,8 @@ RiscoSecuritySystemAccessory.prototype = {
                 //successful call
                 self.log('Relogin success...');
 
-                risco.arm(riscoArm).then(function (resp) {
-                    self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+                risco.arm(state).then(function (resp) {
+                    //self.securityService.setCharacteristic(Characteristic.On, state);
                     callback(null, state);
 
                 }).catch(function (error) {
@@ -115,10 +136,10 @@ RiscoSecuritySystemAccessory.prototype = {
 
             risco.getInitState().then(function (resp) {
                 // Worked.
-                if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
-                    self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
-                    callback(null, resp);
-                }
+                // if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
+                self.log("Actual state is: " + resp);
+                callback(null, resp);
+                // }
 
             }).catch(function (error) {
                 callback("error");
@@ -128,6 +149,16 @@ RiscoSecuritySystemAccessory.prototype = {
             callback("error");
         });
     },
+    /*
+    getCurrentState: function (callback) {
+        this.log("Getting current state");
+        this.getState(callback);
+    },
+
+    getTargetState: function (callback) {
+        this.log("Getting target state");
+        this.getState(callback);
+    },*/
 
     identify: function (callback) {
         this.log("Identify requested!");
@@ -135,25 +166,13 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     getServices: function () {
-        this.securityService = new Service.SecuritySystem(this.name);
+        this.securityService = new Service.Switch(this.name);
 
         this.securityService
-            .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-            .on('get', this.getState.bind(this));
-            
-
-        this.securityService
-            .getCharacteristic(Characteristic.SecuritySystemTargetState)
+            .getCharacteristic(Characteristic.On)
             .on('get', this.getState.bind(this))
             .on('set', this.setTargetState.bind(this));
 
-        
-        this.infoService = new Service.AccessoryInformation();
-        this.infoService
-            .setCharacteristic(Characteristic.Manufacturer, "Daniel S")
-            .setCharacteristic(Characteristic.Model, "Risco Alarm")
-            .setCharacteristic(Characteristic.SerialNumber, "Version 1.1.3");
-        
-        return [ this.infoService, this.securityService ];
+        return [this.securityService];
     }
 };
