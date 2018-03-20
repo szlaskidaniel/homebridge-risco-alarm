@@ -2,8 +2,10 @@ This is plugin that integrate Homebridge with Risco Cloud Alarm Security System.
 Integration works only when proper Ethernet module is added to your Risco Unit and you are able to arm & disarm your system via https://www.riscocloud.com/ELAS/WebUI.
 
 For now there are only 2 working states (ARM / DISARM), where ARM is common for all HomeKit states (AWAY, NIGHT, AT HOME).
-Also, currently Plugin supports only 1 Partition (Zone), as Security Module in HomeKit looks globally, and cannot distinguish difference between multiple Zones armed / disarmed.
+If more than 0 Partitions (Zones) are armed, Plugin reports that as system is ARMED.
+HomeKit looks globally, cannot distinguish difference between multiple Zones armed / disarmed.
 
+When Polling option is enabled, Alarm state is refreshed in background, that means when you open HomeApp - there is no delay to display RiscoAlarm status. It's retreived from cached value.
 
 # Installation
 
@@ -20,6 +22,8 @@ Configuration sample:
         {
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
+            "polling": true,
+            "pollInterval": 30000,
             "riscoUsername": "",
             "riscoPassword": "",
             "riscoPIN": ""
@@ -33,3 +37,5 @@ Fields:
 * "name": Can be anything (used in logs)
 * "riscoUsername" , "riscoPassword": UserName and Password for you Web interface to RiscoCloud
 * "riscoPIN": PIN Code used for arm/disarm
+* "polling": optionally poll for latest RiscoCloud status
+* "pollInterval": time in ms for polling
