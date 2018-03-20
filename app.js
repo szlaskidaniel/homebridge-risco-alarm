@@ -1,6 +1,9 @@
 var Service, Characteristic;
-
+var waitUntil = require('wait-until');
+var pjson = require('./package.json');
 var risco = require('./risco');
+
+var riscoCurrentState;
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -107,16 +110,18 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     getState: function (callback) {
+
+        if (riscoCurrentState)
+            riscoCurrentState = undefined;
+
         var self = this;
 
         risco.login().then(function (resp) {
-            //successful call
-            self.log('Login success...');
-
-            risco.getInitState().then(function (resp) {
+            risco.getState().then(function (resp) {
                 // Worked.
                 if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                     self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
+                    riscoCurrentState = resp;
                     callback(null, resp);
                 }
 
@@ -129,6 +134,28 @@ RiscoSecuritySystemAccessory.prototype = {
         });
     },
 
+
+    getCurrentState: function (callback) {
+        self.log('Getting current state - delayed...');
+        waitUntil()
+            .interval(500)
+            .times(15)
+            .condition(function () {
+                return (riscoCurrentState ? true : false);
+            })
+            .done(function (result) {
+                // do stuff 
+                self.log('Update current state to:', riscoCurrentState);
+                callback(null, riscoCurrentState);
+
+            });
+    },
+
+    getTargetState: function (callback) {
+        this.log("Getting target state");
+        this.getState(callback);
+    },
+
     identify: function (callback) {
         this.log("Identify requested!");
         callback(); // success
@@ -139,21 +166,21 @@ RiscoSecuritySystemAccessory.prototype = {
 
         this.securityService
             .getCharacteristic(Characteristic.SecuritySystemCurrentState)
-            .on('get', this.getState.bind(this));
-            
+            .on('get', this.getCurrentState.bind(this));
+
 
         this.securityService
             .getCharacteristic(Characteristic.SecuritySystemTargetState)
-            .on('get', this.getState.bind(this))
+            .on('get', this.getTargetState.bind(this))
             .on('set', this.setTargetState.bind(this));
 
-        
+
         this.infoService = new Service.AccessoryInformation();
         this.infoService
             .setCharacteristic(Characteristic.Manufacturer, "Daniel S")
-            .setCharacteristic(Characteristic.Model, "Risco Alarm")
-            .setCharacteristic(Characteristic.SerialNumber, "Version 1.1.3");
-        
-        return [ this.infoService, this.securityService ];
+            .setCharacteristic(Characteristic.Model, this.name)
+            .setCharacteristic(Characteristic.SerialNumber, pjson.version);
+
+        return [this.infoService, this.securityService];
     }
 };

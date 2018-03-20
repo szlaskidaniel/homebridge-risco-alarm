@@ -31,10 +31,9 @@ function login() {
             headers: {},
             json: post_data
         };
-
         request(options, function (err, res, body) {
             if (!err && res.statusCode == 302) {
-                self.log('logged In !');
+                self.log('Logged In');
                 riscoCookies = res.headers['set-cookie'];
                 resolve();
             } else {
@@ -64,7 +63,7 @@ function getState() {
             },
             json: post_data
         };
-
+        self.log('getState...');
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
