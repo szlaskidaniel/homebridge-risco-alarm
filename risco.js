@@ -110,6 +110,78 @@ function getState() {
     })
 }
 
+function refreshState() {
+
+    return new Promise(function (resolve, reject) {
+        
+        var post_data = {};
+
+        var options = {
+            url: 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState',
+            method: 'POST',
+            headers: {
+                "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
+                "Origin": "https://www.riscocloud.com",
+                "Cookie": riscoCookies
+            },
+            json: post_data
+        };
+        
+        request(options, function (err, res, body) {
+            if (!err) {
+                // Check error inside JSON
+                try {
+                    if (body.error == 3) {
+                        // Error. Try to login first
+                        self.log('Error: 3. Try to login first.');
+                        reject();
+                        return
+                    }
+                } catch (error) {
+
+                }
+
+                // Check if overview is present
+
+                if (body.overview == undefined) {
+                    // No changes. Empty response
+                    resolve();
+                    return
+                }
+
+                //console.log('No error, status: ', res.statusCode);
+                //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
+                //self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
+
+                var riscoState;
+                // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
+                // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
+                // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM:
+                // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
+                //self.log(body);
+
+                if (body.OngoingAlarm == true) {
+                    riscoState = 4;
+                } else {
+                    try {
+                        var armedZones = body.overview.partInfo.armedStr.split(' ');
+                        if (parseInt(armedZones[0]) > 0) {
+                            riscoState = 1 // Armed
+                        } else
+                            riscoState = 3 // Disarmed
+                    } catch (error) {
+                        resolve();
+                    }
+                }
+
+                resolve(riscoState);
+            } else
+                reject();
+        })
+    })
+}
+
+
 
 
 function arm(aState) {
@@ -175,5 +247,6 @@ module.exports = {
     init,
     login,
     getState,
+    refreshState,
     arm
 };

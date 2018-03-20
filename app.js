@@ -1,9 +1,10 @@
 var Service, Characteristic;
 var waitUntil = require('wait-until');
+var pollingtoevent = require("polling-to-event");
+
 var pjson = require('./package.json');
 var risco = require('./risco');
 
-var riscoCurrentState;
 
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
@@ -11,20 +12,9 @@ module.exports = function (homebridge) {
     homebridge.registerAccessory("homebridge-risco-alarm", "RiscoAlarm", RiscoSecuritySystemAccessory);
 }
 
-function RiscoSecuritySystemAccessory(log, config) {
 
-    this.log = log;
-    this.name = config["name"];
-    this.riscoUsername = config["riscoUsername"];
-    this.riscoPassword = config["riscoPassword"];
-    this.riscoPIN = config["riscoPIN"];
-
-    self = this;
-
-
-    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
-
-}
+// Default Value
+var riscoCurrentState = 3;
 
 function translateState(aState) {
 
@@ -55,6 +45,47 @@ function translateState(aState) {
     return translatedSate
 }
 
+function RiscoSecuritySystemAccessory(log, config) {
+
+    this.log = log;
+    this.name = config["name"];
+    this.riscoUsername = config["riscoUsername"];
+    this.riscoPassword = config["riscoPassword"];
+    this.riscoPIN = config["riscoPIN"];
+    this.polling = config["polling"] || false;
+    this.pollInterval = config["pollInterval"] || 30000;
+
+    self = this;
+    
+    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
+
+    // set up polling if requested
+    if (self.polling) {
+        self.log("Starting polling with an interval of %s ms", self.pollInterval);
+        var emitter = pollingtoevent(function (done) {
+            self.refreshState(function (err, result) {
+                done(err, result);
+            });
+        }, {
+            longpolling: true,
+            interval: self.pollInterval
+        });
+
+        emitter.on("longpoll", function (state) {
+            self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
+            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+
+        });
+
+        emitter.on("err", function (err) {
+            self.log("Polling failed, error was %s", err);
+        });
+    }
+
+
+}
+
+
 RiscoSecuritySystemAccessory.prototype = {
 
     setTargetState: function (state, callback) {
@@ -82,6 +113,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
         risco.arm(riscoArm).then(function (resp) {
             self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+            riscoCurrentState = state;
             callback(null, state);
 
         }).catch(function (error) {
@@ -93,6 +125,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
                 risco.arm(riscoArm).then(function (resp) {
                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+                    riscoCurrentState = state;
                     callback(null, state);
 
                 }).catch(function (error) {
@@ -136,24 +169,65 @@ RiscoSecuritySystemAccessory.prototype = {
 
 
     getCurrentState: function (callback) {
-        self.log('Getting current state - delayed...');
-        waitUntil()
-            .interval(500)
-            .times(15)
-            .condition(function () {
-                return (riscoCurrentState ? true : false);
-            })
-            .done(function (result) {
-                // do stuff 
-                self.log('Update current state to:', riscoCurrentState);
-                callback(null, riscoCurrentState);
+        if (self.polling) {
+            callback(null, riscoCurrentState);
+        } else {
+            self.log('Getting current state - delayed...');
+            waitUntil()
+                .interval(500)
+                .times(15)
+                .condition(function () {
+                    return (riscoCurrentState ? true : false);
+                })
+                .done(function (result) {
+                    // do stuff 
+                    self.log('Update current state to:', riscoCurrentState);
+                    callback(null, riscoCurrentState);
 
-            });
+                });
+        }
     },
 
     getTargetState: function (callback) {
-        this.log("Getting target state");
-        this.getState(callback);
+        if (self.polling) {
+            callback(null, riscoCurrentState);
+        } else {
+            this.log("Getting target state");
+            this.getState(callback);
+        }
+    },
+
+    refreshState: function (callback) {
+        risco.refreshState().then(function (resp) {
+            if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
+                //self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
+                riscoCurrentState = resp;
+                callback(null, resp);
+            } else {
+                // Return last known status
+                callback(null, riscoCurrentState)
+            }
+
+        }).catch(function (error) {
+            self.log('Sesion expired, relogin...');
+            risco.login().then(function (resp) {
+                risco.getState().then(function (resp) {
+                    // Worked.
+                    if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
+                        self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
+                        riscoCurrentState = resp;
+                        callback(null, resp);
+                    }
+
+                }).catch(function (error) {
+                    callback("error");
+                })
+
+            }).catch(function (error) {
+                callback("error");
+            });
+
+        })
     },
 
     identify: function (callback) {

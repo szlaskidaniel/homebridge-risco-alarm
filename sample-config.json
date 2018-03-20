@@ -4,7 +4,7 @@
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
             "polling": true,
-            "pollinterval": 15,
+            "pollInterval": 15000,
             "riscoUsername": "",
             "riscoPassword": "",
             "riscoPIN": ""
