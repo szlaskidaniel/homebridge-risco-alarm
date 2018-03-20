@@ -1,6 +1,6 @@
 var Service, Characteristic;
 var waitUntil = require('wait-until');
-var pollingtoevent = require("polling-to-event");
+var pollingtoevent = require('polling-to-event');
 
 var pjson = require('./package.json');
 var risco = require('./risco');
