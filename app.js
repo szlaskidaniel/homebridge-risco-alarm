@@ -73,8 +73,11 @@ function RiscoSecuritySystemAccessory(log, config) {
         });
 
         emitter.on("longpoll", function (state) {
-            self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
-            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+            if (state) {
+                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
+                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+            }
+
 
         });
 
