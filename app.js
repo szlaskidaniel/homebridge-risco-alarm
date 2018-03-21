@@ -46,7 +46,7 @@ function translateState(aState) {
 }
 
 function RiscoSecuritySystemAccessory(log, config) {
-    var self = this;
+    
 
     this.log = log;
     this.name = config["name"];
@@ -56,8 +56,32 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
 
-    // initialize
-    self.init();
+    self = this;
+        
+    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
+
+    // set up polling if requested
+    if (self.polling) {
+        self.log("Starting polling with an interval of %s ms", self.pollInterval);
+        var emitter = pollingtoevent(function (done) {
+            self.getRefreshState(function (err, result) {
+                done(err, result);
+            });
+        }, {
+            longpolling: true,
+            interval: self.pollInterval
+        });
+
+        emitter.on("longpoll", function (state) {
+            self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
+            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+
+        });
+
+        emitter.on("err", function (err) {
+            self.log("Polling failed, error was %s", err);
+        });
+    }
 
 }
 
@@ -65,37 +89,9 @@ function RiscoSecuritySystemAccessory(log, config) {
 
 RiscoSecuritySystemAccessory.prototype = {
 
-    init: function (callback) {
-        var self = this;
-        risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
-
-        // set up polling if requested
-        if (self.polling) {
-            self.log("Starting polling with an interval of %s ms", self.pollInterval);
-            var emitter = pollingtoevent(function (done) {
-                self.getRefreshState(function (err, result) {
-                    done(err, result);
-                });
-            }, {
-                longpolling: true,
-                interval: self.pollInterval
-            });
-    
-            emitter.on("longpoll", function (state) {
-                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
-                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-    
-            });
-    
-            emitter.on("err", function (err) {
-                self.log("Polling failed, error was %s", err);
-            });
-        }
-    },
-
     setTargetState: function (state, callback) {
         this.log("Setting state to %s", translateState(state));
-        var self = this;
+
         switch (state) {
             case Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // stayArm = 0
@@ -152,8 +148,6 @@ RiscoSecuritySystemAccessory.prototype = {
         if (riscoCurrentState)
             riscoCurrentState = undefined;
 
-        var self = this;
-
         risco.login().then(function (resp) {
             risco.getState().then(function (resp) {
                 // Worked.
@@ -174,6 +168,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
 
     getCurrentState: function (callback) {
+        
         if (self.polling) {
             callback(null, riscoCurrentState);
         } else {
@@ -194,15 +189,17 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     getTargetState: function (callback) {
+        
         if (self.polling) {
             callback(null, riscoCurrentState);
         } else {
-            this.log("Getting target state");
+            this.log("Getting target state...");
             this.getState(callback);
         }
     },
 
     getRefreshState: function (callback) {
+        
         risco.refreshState().then(function (resp) {
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 //self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
