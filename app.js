@@ -122,7 +122,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
             risco.login().then(function (resp) {
                 //successful call
-                self.log('Relogin success...');
+                //self.log('Relogin success...');
 
                 risco.arm(riscoArm).then(function (resp) {
                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);

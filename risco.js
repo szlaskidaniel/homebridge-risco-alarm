@@ -15,7 +15,7 @@ function init(aUser, aPassword, aPIN) {
 function login() {
 
     return new Promise(function (resolve, reject) {
-        self.log('login to RiscoCloud...');
+        //self.log('login to RiscoCloud...');
 
         var post_data = {
             "username": risco_username,
@@ -33,7 +33,7 @@ function login() {
         };
         request(options, function (err, res, body) {
             if (!err && res.statusCode == 302) {
-                self.log('Logged In');
+                //self.log('Logged In');
                 riscoCookies = res.headers['set-cookie'];
                 resolve();
             } else {
@@ -63,14 +63,14 @@ function getState() {
             },
             json: post_data
         };
-        self.log('getState...');
+        //self.log('getState...');
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
                 try {
                     if (body.error == 3) {
                         // Error. Try to login first
-                        self.log('Error: 3. Try to login first.');
+                        //self.log('Error: 3. Try to login first.');
                         reject();
                         return
                     }
@@ -79,7 +79,7 @@ function getState() {
                 }
 
                 //console.log('No error, status: ', res.statusCode);
-                self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
+                //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
                 self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
 
                 var riscoState;
@@ -133,7 +133,7 @@ function refreshState() {
                 try {
                     if (body.error == 3) {
                         // Error. Try to login first
-                        self.log('Error: 3. Try to login first.');
+                        //self.log('Error: 3. Try to login first.');
                         reject();
                         return
                     }
@@ -224,14 +224,14 @@ function arm(aState) {
                 try {
                     if (body.error == 3) {
                         // Error. Try to login first !
-                        self.log('Error: 3. Try to login first.');
+                        //self.log('Error: 3. Try to login first.');
                         reject();
                         return
                     }
                 } catch (error) {
 
                 }
-                self.log('Success');
+                //self.log('Success');
                 resolve();
             } else {
                 var errMsg = 'Error ' + res.statusCode;
