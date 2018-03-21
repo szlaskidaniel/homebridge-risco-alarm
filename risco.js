@@ -79,7 +79,7 @@ function getState() {
                 }
 
                 //console.log('No error, status: ', res.statusCode);
-                //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
+                self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
                 self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
 
                 var riscoState;
