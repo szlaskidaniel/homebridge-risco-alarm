@@ -1,6 +1,6 @@
 var Service, Characteristic;
 var waitUntil = require('wait-until');
-var pollingtoevent = require('polling-to-event');
+var pollingtoevent = require("polling-to-event");
 
 var pjson = require('./package.json');
 var risco = require('./risco');
@@ -14,7 +14,7 @@ module.exports = function (homebridge) {
 
 
 // Default Value
-var riscoCurrentState = 3;
+var riscoCurrentState; // = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
 
 function translateState(aState) {
 
@@ -46,6 +46,7 @@ function translateState(aState) {
 }
 
 function RiscoSecuritySystemAccessory(log, config) {
+    var self = this;
 
     this.log = log;
     this.name = config["name"];
@@ -55,38 +56,42 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
 
-    self = this;
-    
-    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
-
-    // set up polling if requested
-    if (self.polling) {
-        self.log("Starting polling with an interval of %s ms", self.pollInterval);
-        var emitter = pollingtoevent(function (done) {
-            self.refreshState(function (err, result) {
-                done(err, result);
-            });
-        }, {
-            longpolling: true,
-            interval: self.pollInterval
-        });
-
-        emitter.on("longpoll", function (state) {
-            self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
-            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-
-        });
-
-        emitter.on("err", function (err) {
-            self.log("Polling failed, error was %s", err);
-        });
-    }
-
+    // initialize
+    self.init();
 
 }
 
 
+
 RiscoSecuritySystemAccessory.prototype = {
+
+    init: function (callback) {
+        var self = this;
+        risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
+
+        // set up polling if requested
+        if (self.polling) {
+            self.log("Starting polling with an interval of %s ms", self.pollInterval);
+            var emitter = pollingtoevent(function (done) {
+                self.getRefreshState(function (err, result) {
+                    done(err, result);
+                });
+            }, {
+                longpolling: true,
+                interval: self.pollInterval
+            });
+    
+            emitter.on("longpoll", function (state) {
+                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify !");
+                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+    
+            });
+    
+            emitter.on("err", function (err) {
+                self.log("Polling failed, error was %s", err);
+            });
+        }
+    },
 
     setTargetState: function (state, callback) {
         this.log("Setting state to %s", translateState(state));
@@ -197,7 +202,7 @@ RiscoSecuritySystemAccessory.prototype = {
         }
     },
 
-    refreshState: function (callback) {
+    getRefreshState: function (callback) {
         risco.refreshState().then(function (resp) {
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 //self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
