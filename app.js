@@ -1,3 +1,5 @@
+"use strict";
+
 var Service, Characteristic;
 var waitUntil = require('wait-until');
 var pollingtoevent = require("polling-to-event");
@@ -46,7 +48,7 @@ function translateState(aState) {
 }
 
 function RiscoSecuritySystemAccessory(log, config) {
-    
+
 
     this.log = log;
     this.name = config["name"];
@@ -56,8 +58,8 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
 
-    self = this;
-        
+    var self = this;
+
     risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN);
 
     // set up polling if requested
@@ -171,7 +173,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
 
     getCurrentState: function (callback) {
-        
+
         if (self.polling) {
             callback(null, riscoCurrentState);
         } else {
@@ -183,7 +185,7 @@ RiscoSecuritySystemAccessory.prototype = {
                     return (riscoCurrentState ? true : false);
                 })
                 .done(function (result) {
-                    // do stuff 
+                    // do stuff
                     self.log('Update current state to:', riscoCurrentState);
                     callback(null, riscoCurrentState);
 
@@ -192,7 +194,7 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     getTargetState: function (callback) {
-        
+
         if (self.polling) {
             callback(null, riscoCurrentState);
         } else {
@@ -202,7 +204,7 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     getRefreshState: function (callback) {
-        
+
         risco.refreshState().then(function (resp) {
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 //self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
