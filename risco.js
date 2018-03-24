@@ -5,17 +5,22 @@ var riscoCookies;
 var risco_username;
 var risco_password;
 var risco_pincode;
+var self;
 
-function init(aUser, aPassword, aPIN) {
+
+function init(aUser, aPassword, aPIN, context) {
     risco_username = aUser;
     risco_password = aPassword;
     risco_pincode = aPIN;
+    self = context;
+    self.log('Inside INIT !');
+
 }
 
 function login() {
 
     return new Promise(function (resolve, reject) {
-        //self.log('login to RiscoCloud...');
+        self.log('login to RiscoCloud...');
 
         var post_data = {
             "username": risco_username,
@@ -33,11 +38,22 @@ function login() {
         };
         request(options, function (err, res, body) {
             if (!err && res.statusCode == 302) {
-                //self.log('Logged In');
+                self.log('Logged In');
                 riscoCookies = res.headers['set-cookie'];
                 resolve();
             } else {
-                var errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;
+                var errMsg;
+                if (res) {
+                    try {
+                        errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;    
+                    } catch (error) {
+                        
+                    }
+                    
+                } else {
+                    errMsg = 'error during connecting with RiscoCloud';
+                }
+                
                 self.log(errMsg);
                 reject(errMsg);
             }
@@ -50,7 +66,6 @@ function login() {
 function getState() {
 
     return new Promise(function (resolve, reject) {
-        //self.log('> getState from RiscoCloud...')
         var post_data = {};
 
         var options = {
@@ -63,7 +78,6 @@ function getState() {
             },
             json: post_data
         };
-        //self.log('getState...');
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
@@ -78,9 +92,7 @@ function getState() {
 
                 }
 
-                //console.log('No error, status: ', res.statusCode);
-                self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
-                self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
+                self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
 
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
@@ -152,6 +164,7 @@ function refreshState() {
                 //console.log('No error, status: ', res.statusCode);
                 //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
                 //self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
+                //self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
 
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
@@ -231,12 +244,11 @@ function arm(aState) {
                 } catch (error) {
 
                 }
-                //self.log('Success');
+                self.log('New Risco state set.');
                 resolve();
             } else {
                 var errMsg = 'Error ' + res.statusCode;
                 self.log(errMsg);
-                self.log(res);
                 reject(errMsg);
             }
         })
