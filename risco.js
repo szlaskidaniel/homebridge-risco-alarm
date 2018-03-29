@@ -13,7 +13,6 @@ function init(aUser, aPassword, aPIN, context) {
     risco_password = aPassword;
     risco_pincode = aPIN;
     self = context;
-    self.log('Inside INIT !');
 
 }
 
