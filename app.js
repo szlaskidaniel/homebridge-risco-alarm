@@ -223,7 +223,7 @@ RiscoSecuritySystemAccessory.prototype = {
             }
 
         }).catch(function (error) {
-            //self.log('Sesion expired, relogin...');
+            self.log('Sesion expired, relogin...');
             risco.login().then(function (resp) {
                 risco.getState().then(function (resp) {
                     // Worked.

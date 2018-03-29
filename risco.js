@@ -20,7 +20,7 @@ function init(aUser, aPassword, aPIN, context) {
 function login() {
 
     return new Promise(function (resolve, reject) {
-        self.log('login to RiscoCloud...');
+        //self.log('login to RiscoCloud...');
 
         var post_data = {
             "username": risco_username,
@@ -38,7 +38,7 @@ function login() {
         };
         request(options, function (err, res, body) {
             if (!err && res.statusCode == 302) {
-                self.log('Logged In');
+                //self.log('Logged In');
                 riscoCookies = res.headers['set-cookie'];
                 resolve();
             } else {
@@ -92,7 +92,7 @@ function getState() {
 
                 }
 
-                self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
+                //self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
 
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
