@@ -76,8 +76,17 @@ function RiscoSecuritySystemAccessory(log, config) {
 
         emitter.on("longpoll", function (state) {
             if (state) {
-                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
-                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+                // Get OnceMore time Current State:
+                self.log('Double check received state: ', translateState(state));
+                self.getRefreshState(function (err, result) {
+                    if (state == result) {
+                        self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
+                        self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+                    } else {
+                        self.log('No new state to report.');
+                    }
+                });
+
             }
 
 
