@@ -77,15 +77,11 @@ function RiscoSecuritySystemAccessory(log, config) {
         emitter.on("longpoll", function (state) {
             if (state) {
                 // Get OnceMore time Current State:
-                self.log('Double check received state: ', translateState(state));
-                self.getRefreshState(function (err, result) {
-                    if (state == result) {
                         self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
                         self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-                    } else {
-                        self.log('No new state to report.');
-                    }
-                });
+                        riscoCurrentState = state;
+                
+                
 
             }
 
@@ -224,15 +220,37 @@ RiscoSecuritySystemAccessory.prototype = {
         var self = this;
         risco.refreshState().then(function (resp) {
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
-                riscoCurrentState = resp;
-                callback(null, resp);
+                if (resp != riscoCurrentState) {
+                    self.log('Double check received state: ', translateState(resp));
+                    
+                    risco.login().then(function (resp) {
+                        risco.getState().then(function (resp) {
+                            // Worked.
+                            if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
+                                riscoCurrentState = resp;
+                                callback(null, resp);
+                            }
+        
+                        }).catch(function (error) {
+                            self.log(error);
+                            callback("error");
+                        })
+                    });
+
+                } else {
+                    // Return last known status
+                    callback(null, riscoCurrentState)
+                }
+
+                //riscoCurrentState = resp;
+                //callback(null, resp);
             } else {
                 // Return last known status
                 callback(null, riscoCurrentState)
             }
 
         }).catch(function (error) {
-            self.log('Sesion expired, relogin...');
+            //self.log('Sesion expired, relogin...');
             risco.login().then(function (resp) {
                 risco.getState().then(function (resp) {
                     // Worked.

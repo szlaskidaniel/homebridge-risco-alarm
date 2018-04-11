@@ -182,7 +182,7 @@ function refreshState() {
                         } else
                             riscoState = 3 // Disarmed
                     } catch (error) {
-                        resolve();
+                        reject();
                     }
                 }
 
