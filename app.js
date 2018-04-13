@@ -57,6 +57,8 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.riscoPIN = config["riscoPIN"];
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
+    this.armCmd = config["armCommand"] || "0:armed";
+    this.disarmCmd = config["disarmCommand"] || "0:disarmed";
 
     var self = this;
 
@@ -105,28 +107,34 @@ RiscoSecuritySystemAccessory.prototype = {
 
         self.log("Setting state to %s", translateState(state));
         var riscoArm;
+        var cmd;
+
 
         switch (state) {
             case Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // stayArm = 0
                 riscoArm = true;
+                cmd = self.armCmd;
                 break;
             case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                 // stayArm = 2
                 riscoArm = true;
+                cmd = self.armCmd;
                 break;
             case Characteristic.SecuritySystemTargetState.AWAY_ARM:
                 // stayArm = 1
                 riscoArm = true;
+                cmd = self.armCmd;
                 break;
             case Characteristic.SecuritySystemTargetState.DISARM:
                 // stayArm = 3
                 riscoArm = false
+                cmd = self.disarmCmd;
                 break;
 
         };
 
-        risco.arm(riscoArm).then(function (resp) {
+        risco.arm(riscoArm, cmd).then(function (resp) {
             self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
             riscoCurrentState = state;
             callback(null, state);
@@ -138,7 +146,7 @@ RiscoSecuritySystemAccessory.prototype = {
                 //successful call
                 //self.log('Relogin success...');
 
-                risco.arm(riscoArm).then(function (resp) {
+                risco.arm(riscoArm, cmd).then(function (resp) {
                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
                     riscoCurrentState = state;
                     callback(null, state);

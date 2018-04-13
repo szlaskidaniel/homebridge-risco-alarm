@@ -196,21 +196,19 @@ function refreshState() {
 
 
 
-function arm(aState) {
+function arm(aState, cmd) {
 
     //console.log('func: arm');
     return new Promise(function (resolve, reject) {
 
-        var targetType;
+        var targetType = cmd;
         var targetPasscode;
 
         if (aState) {
             // ARM
-            targetType = "0:armed";
             targetPasscode = "";
         } else {
             // DISARM
-            targetType = "0:disarmed";
             targetPasscode = "------"
         }
 

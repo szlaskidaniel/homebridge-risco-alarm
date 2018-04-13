@@ -26,7 +26,9 @@ Configuration sample:
             "pollInterval": 30000,
             "riscoUsername": "",
             "riscoPassword": "",
-            "riscoPIN": ""
+            "riscoPIN": "",
+            "armCommand": "0:armed",
+            "disarmCommand": "0:disarmed"
         }
     ]
 ```
@@ -39,3 +41,9 @@ Fields:
 * "riscoPIN": PIN Code used for arm/disarm
 * "polling": optionally poll for latest RiscoCloud status
 * "pollInterval": time in ms for polling
+* "armCommand": partitions that should be armed
+* "disarmCommand": partitions that should be disarmed
+
+When set partitions for arm/disarm please use below schema:
+For 1 partition "0:armed" and "0:disarmed" , for more:
+"0:armed 1:armed 2:armed" and "0:disarmed 1:disarmed 2:disarmed"
