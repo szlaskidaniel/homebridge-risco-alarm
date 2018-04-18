@@ -57,8 +57,8 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.riscoPIN = config["riscoPIN"];
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
-    this.armCmd = config["armCommand"] || "0:armed";
-    this.disarmCmd = config["disarmCommand"] || "0:disarmed";
+    this.armCmd = config["armCommand"] || "armed";
+    this.disarmCmd = config["disarmCommand"] || "disarmed";
 
     var self = this;
 
@@ -240,7 +240,6 @@ RiscoSecuritySystemAccessory.prototype = {
                             }
         
                         }).catch(function (error) {
-                            self.log(error);
                             callback("error");
                         })
                     });
@@ -273,7 +272,6 @@ RiscoSecuritySystemAccessory.prototype = {
                 })
 
             }).catch(function (error) {
-                self.log(error);
                 callback("error");
             });
 

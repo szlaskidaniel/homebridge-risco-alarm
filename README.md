@@ -27,8 +27,8 @@ Configuration sample:
             "riscoUsername": "",
             "riscoPassword": "",
             "riscoPIN": "",
-            "armCommand": "0:armed",
-            "disarmCommand": "0:disarmed"
+            "armCommand": "armed",
+            "disarmCommand": "disarmed"
         }
     ]
 ```
@@ -45,5 +45,5 @@ Fields:
 * "disarmCommand": partitions that should be disarmed
 
 When set partitions for arm/disarm please use below schema:
-For 1 partition "0:armed" and "0:disarmed" , for more:
-"0:armed 1:armed 2:armed" and "0:disarmed 1:disarmed 2:disarmed"
+For all partitions actions use default "armed" and "disarmed" , for single partition use
+"1:armed" and "1:disarmed"

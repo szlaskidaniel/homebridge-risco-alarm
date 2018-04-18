@@ -8,8 +8,8 @@
             "riscoUsername": "",
             "riscoPassword": "",
             "riscoPIN": "",
-            "armCommand": "0:armed",
-            "disarmCommand": "0:disarmed"
+            "armCommand": "armed",
+            "disarmCommand": "disarmed"
         }
     ]
 }
