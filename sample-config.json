@@ -9,6 +9,7 @@
             "riscoPassword": "",
             "riscoPIN": "",
             "armCommand": "armed",
+            "partialCommand": "partially",
             "disarmCommand": "disarmed"
         }
     ]
