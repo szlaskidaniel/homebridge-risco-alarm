@@ -105,10 +105,17 @@ function getState() {
                 } else {
                     try {
                         var armedZones = body.overview.partInfo.armedStr.split(' ');
+                        var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
+                        
                         if (parseInt(armedZones[0]) > 0) {
-                            riscoState = 1 // Armed
-                        } else
-                            riscoState = 3 // Disarmed
+                            riscoState = 1; // Armed
+                        }
+                        else if (parseInt(partArmedZones[0]) > 0) {
+                            riscoState = 2; // Partially Armed
+                        }
+                        else {
+                            riscoState = 3; // Disarmed
+                        }
                     } catch (error) {
                         reject();
                     }
@@ -177,10 +184,17 @@ function refreshState() {
                 } else {
                     try {
                         var armedZones = body.overview.partInfo.armedStr.split(' ');
+                        var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
+                        
                         if (parseInt(armedZones[0]) > 0) {
-                            riscoState = 1 // Armed
-                        } else
-                            riscoState = 3 // Disarmed
+                            riscoState = 1; // Armed
+                        }
+                        else if (parseInt(partArmedZones[0]) > 0) {
+                            riscoState = 2; // Partially Armed
+                        }
+                        else {
+                            riscoState = 3; // Disarmed
+                        }
                     } catch (error) {
                         reject();
                     }
