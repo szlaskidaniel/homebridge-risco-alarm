@@ -257,10 +257,11 @@ RiscoSecuritySystemAccessory.prototype = {
             }
 
         }).catch(function (error) {
-            //self.log('Sesion expired, relogin...');
+            self.log('Sesion expired, relogin...');
             risco.login().then(function (resp) {
                 risco.getState().then(function (resp) {
                     // Worked.
+                    self.log('GetState success', resp);
                     if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                         riscoCurrentState = resp;
                         callback(null, resp);
