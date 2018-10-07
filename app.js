@@ -58,6 +58,7 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
     this.armCmd = config["armCommand"] || "armed";
+    this.partialCommand = config["partialCommand"] || "partially";
     this.disarmCmd = config["disarmCommand"] || "disarmed";
     this.riscoSiteId = config["riscoSiteId"]; 
 
@@ -120,7 +121,7 @@ RiscoSecuritySystemAccessory.prototype = {
             case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                 // stayArm = 2
                 riscoArm = true;
-                cmd = self.armCmd;
+                cmd = self.partialCommand;
                 break;
             case Characteristic.SecuritySystemTargetState.AWAY_ARM:
                 // stayArm = 1
