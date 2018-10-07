@@ -59,10 +59,11 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.pollInterval = config["pollInterval"] || 30000;
     this.armCmd = config["armCommand"] || "armed";
     this.disarmCmd = config["disarmCommand"] || "disarmed";
+    this.riscoSiteId = config["riscoSiteId"]; 
 
     var self = this;
 
-    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN, this);
+    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN, this.riscoSiteId, this);
 
     // set up polling if requested
     if (self.polling) {
@@ -268,12 +269,15 @@ RiscoSecuritySystemAccessory.prototype = {
                     }
 
                 }).catch(function (error) {
-                    self.log(error);
+                    self.log('Get State Failed', error);
                     callback("error");
+                    return
                 })
 
             }).catch(function (error) {
+                self.log('Login failed', error);
                 callback("error");
+                return
             });
 
         })

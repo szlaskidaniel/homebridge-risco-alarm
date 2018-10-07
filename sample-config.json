@@ -7,6 +7,7 @@
             "pollInterval": 15000,
             "riscoUsername": "",
             "riscoPassword": "",
+            "riscoSiteId": 12345,
             "riscoPIN": "",
             "armCommand": "armed",
             "disarmCommand": "disarmed"

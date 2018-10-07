@@ -5,21 +5,24 @@ var riscoCookies;
 var risco_username;
 var risco_password;
 var risco_pincode;
+var risco_siteId;
 var self;
 
 
-function init(aUser, aPassword, aPIN, context) {
+function init(aUser, aPassword, aPIN, aSiteId, context) {
     risco_username = aUser;
     risco_password = aPassword;
     risco_pincode = aPIN;
+    risco_siteId = aSiteId;
     self = context;
+
 
 }
 
 function login() {
 
     return new Promise(function (resolve, reject) {
-        //self.log('login to RiscoCloud...');
+        self.log('login to RiscoCloud first stage...');
 
         var post_data = {
             "username": risco_username,
@@ -29,6 +32,7 @@ function login() {
             "langId": "en"
         };
 
+
         var options = {
             url: 'https://www.riscocloud.com/ELAS/WebUI/',
             method: 'POST',
@@ -37,22 +41,63 @@ function login() {
         };
         request(options, function (err, res, body) {
             if (!err && res.statusCode == 302) {
-                //self.log('Logged In');
+                self.log('Got Cookie, save it');
                 riscoCookies = res.headers['set-cookie'];
-                resolve();
+                //self.log('Cookie:', riscoCookies);
+
+                var post_data = {
+                    "SelectedSiteId": risco_siteId,
+                    "Pin": risco_pincode
+                };
+
+
+                var options = {
+                    url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
+                    method: 'POST',
+                    headers: {
+                        'Cookie': riscoCookies,
+                        'Host': 'www.riscocloud.com',
+                        'Origin': 'https://www.riscocloud.com',
+                        'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index'
+                    },
+                    json: post_data
+                };
+                request(options, function (err, res, body) {
+                    if (!err && res.statusCode == 302) {
+                        self.log('LoggedIn !');
+                        //self.log(body);
+                        resolve();
+                    } else {
+                        var errMsg;
+                        if (res) {
+                            try {
+                                errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;
+                            } catch (error) {
+
+                            }
+
+                        } else {
+                            errMsg = 'error during connecting with RiscoCloud';
+                        }
+
+                        self.log(errMsg);
+                        reject(errMsg);
+                    }
+                })
+
             } else {
                 var errMsg;
                 if (res) {
                     try {
-                        errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;    
+                        errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;
                     } catch (error) {
-                        
+
                     }
-                    
+
                 } else {
                     errMsg = 'error during connecting with RiscoCloud';
                 }
-                
+
                 self.log(errMsg);
                 reject(errMsg);
             }
@@ -77,9 +122,11 @@ function getState() {
             },
             json: post_data
         };
+
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
+                self.log(body);
                 try {
                     if (body.error == 3) {
                         // Error. Try to login first
@@ -88,11 +135,13 @@ function getState() {
                         return
                     }
                 } catch (error) {
-
+                    console.log('Failed to read body in risco response');
+                    reject();
+                    return
                 }
 
                 //self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
-
+                self.log(body);
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
@@ -116,15 +165,18 @@ function getState() {
 
                 resolve(riscoState);
             } else
-                reject();
-        })
+                self.log('error during parse request', err);
+            reject();
+            return
+        });
     })
 }
 
 function refreshState() {
 
+    self.log('Risco refreshState');
     return new Promise(function (resolve, reject) {
-        
+
         var post_data = {};
 
         var options = {
@@ -137,7 +189,7 @@ function refreshState() {
             },
             json: post_data
         };
-        
+
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
@@ -145,6 +197,7 @@ function refreshState() {
                     if (body.error == 3) {
                         // Error. Try to login first
                         //self.log('Error: 3. Try to login first.');
+                        self.log('Body.error = 3 , relogin.');
                         reject();
                         return
                     }
