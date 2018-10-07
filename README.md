@@ -18,14 +18,15 @@ When Polling option is enabled, Alarm state is refreshed in background, that mea
 Configuration sample:
 
  ```
-	"accessories": [
+    "accessories": [
         {
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
             "polling": true,
-            "pollInterval": 30000,
+            "pollInterval": 15000,
             "riscoUsername": "",
             "riscoPassword": "",
+            "riscoSiteId": 12345,
             "riscoPIN": "",
             "armCommand": "armed",
             "disarmCommand": "disarmed"
@@ -44,6 +45,19 @@ Fields:
 * "armCommand": partitions that should be armed
 * "disarmCommand": partitions that should be disarmed
 
+New parameter:
+* "riscoSiteId": This is your siteId to login.
+To get your siteId, login to riscocloud via ChromeBrowser (first logins screen), and before providing your PIN (second login page), display source of the page and find string: "<div class="site-name">" ... it will look like:
+
+<div class="site-name" id="site_12345_div">
+
+In that case "12345" is your siteId which should be placed in new config file.
+
+
+
+
 When set partitions for arm/disarm please use below schema:
 For all partitions actions use default "armed" and "disarmed" , for single partition use
 "1:armed" and "1:disarmed"
+
+
