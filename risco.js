@@ -177,7 +177,7 @@ function getState() {
 
 function refreshState() {
 
-    self.log('Risco refreshState');
+    //self.log('Risco refreshState');
     return new Promise(function (resolve, reject) {
 
         var post_data = {};
