@@ -65,8 +65,8 @@ function login() {
                 request(options, function (err, res, body) {
                     if (!err && res.statusCode == 302) {
                         self.log('LoggedIn !');
-                        //self.log(body);
                         resolve();
+                        return
                     } else {
                         var errMsg;
                         if (res) {
@@ -126,7 +126,6 @@ function getState() {
         request(options, function (err, res, body) {
             if (!err) {
                 // Check error inside JSON
-                self.log(body);
                 try {
                     if (body.error == 3) {
                         // Error. Try to login first
@@ -141,7 +140,6 @@ function getState() {
                 }
 
                 //self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
-                self.log(body);
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
@@ -155,14 +153,12 @@ function getState() {
                     try {
                         var armedZones = body.overview.partInfo.armedStr.split(' ');
                         var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
-                        
+
                         if (parseInt(armedZones[0]) > 0) {
                             riscoState = 1; // Armed
-                        }
-                        else if (parseInt(partArmedZones[0]) > 0) {
+                        } else if (parseInt(partArmedZones[0]) > 0) {
                             riscoState = 2; // Partially Armed
-                        }
-                        else {
+                        } else {
                             riscoState = 3; // Disarmed
                         }
                     } catch (error) {
@@ -209,16 +205,19 @@ function refreshState() {
                         return
                     }
                 } catch (error) {
-
+                    self.log('Failed during GET GetCPState');
+                    reject();
+                    return
                 }
 
                 // Check if overview is present
-
+                /*
                 if (body.overview == undefined) {
                     // No changes. Empty response
                     resolve();
                     return
                 }
+                */
 
                 //console.log('No error, status: ', res.statusCode);
                 //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
@@ -235,25 +234,76 @@ function refreshState() {
                 if (body.OngoingAlarm == true) {
                     riscoState = 4;
                 } else {
-                    try {
-                        var armedZones = body.overview.partInfo.armedStr.split(' ');
-                        var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
-                        
-                        if (parseInt(armedZones[0]) > 0) {
-                            riscoState = 1; // Armed
-                        }
-                        else if (parseInt(partArmedZones[0]) > 0) {
-                            riscoState = 2; // Partially Armed
-                        }
-                        else {
-                            riscoState = 3; // Disarmed
-                        }
-                    } catch (error) {
+                    // Try different GET Method
+
+                    var post_data = {};
+
+                    var options = {
+                        url: 'https://www.riscocloud.com/ELAS/WebUI/Overview/Get',
+                        method: 'POST',
+                        headers: {
+                            "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
+                            "Origin": "https://www.riscocloud.com",
+                            "Cookie": riscoCookies
+                        },
+                        json: post_data
+                    };
+
+                    request(options, function (err, res, body) {
+                        if (!err) {
+                            // Check error inside JSON
+                            try {
+                                if (body.error == 3) {
+                                    // Error. Try to login first
+                                    //self.log('Error: 3. Try to login first.');
+                                    self.log('Body.error = 3 , relogin.');
+                                    reject();
+                                    return
+                                }
+                            } catch (error) {
+                                self.log('Failed during GET GetCPState');
+                                reject();
+                                return
+                            }
+
+                            if (body.overview == undefined) {
+                                // No changes. Empty response
+                                resolve();
+                                return
+                            }
+
+                            try {
+                                var armedZones = body.overview.partInfo.armedStr.split(' ');
+                                var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
+
+                                if (parseInt(armedZones[0]) > 0) {
+                                    riscoState = 1; // Armed
+                                } else if (parseInt(partArmedZones[0]) > 0) {
+                                    riscoState = 2; // Partially Armed
+                                } else {
+                                    riscoState = 3; // Disarmed
+                                }
+
+                                resolve(riscoState);
+                                return
+
+
+                            } catch (error) {
+                                self.log('Failed during parse arm zones', error);
+                                reject();
+                                return
+                            }
+
+                        } else
+                            self.log('Error during request /WebUI/Overview/Get')
                         reject();
-                    }
+                        return;
+                    });
+
+
                 }
 
-                resolve(riscoState);
+
             } else
                 reject();
         })

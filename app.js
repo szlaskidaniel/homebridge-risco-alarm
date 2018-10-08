@@ -229,6 +229,7 @@ RiscoSecuritySystemAccessory.prototype = {
     getRefreshState: function (callback) {
         var self = this;
         risco.refreshState().then(function (resp) {
+            self.log('Risco state: ', resp);
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 if (resp != riscoCurrentState) {
                     self.log('Double check received state: ', translateState(resp));
