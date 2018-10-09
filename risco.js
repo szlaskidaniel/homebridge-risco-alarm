@@ -63,7 +63,7 @@ function login() {
                     request(options, function (err, res, body) {
                         try {
                             if (!err && res.statusCode == 302) {
-                                self.log('LoggedIn !');
+                                self.log('login [step2] > LoggedIn !');
                                 resolve();
                                 return
                             } else {
@@ -248,7 +248,7 @@ function refreshState() {
                                 var armedZones = body.overview.partInfo.armedStr.split(' ');
                                 var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
 
-                                self.log('armedZones:', armedZones[0]);
+                                //self.log('armedZones:', armedZones[0]);
                                 if (parseInt(armedZones[0]) > 0) {
                                     riscoState = 1; // Armed
                                 } else if (parseInt(partArmedZones[0]) > 0) {
