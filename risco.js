@@ -20,9 +20,8 @@ function init(aUser, aPassword, aPIN, aSiteId, context) {
 }
 
 function login() {
-
     return new Promise(function (resolve, reject) {
-        self.log('login to RiscoCloud first stage...');
+        self.log('login [step1] to RiscoCloud first stage...');
 
         var post_data = {
             "username": risco_username,
@@ -32,77 +31,68 @@ function login() {
             "langId": "en"
         };
 
-
         var options = {
             url: 'https://www.riscocloud.com/ELAS/WebUI/',
             method: 'POST',
             headers: {},
             json: post_data
         };
+
         request(options, function (err, res, body) {
-            if (!err && res.statusCode == 302) {
-                self.log('Got Cookie, save it');
-                riscoCookies = res.headers['set-cookie'];
-                //self.log('Cookie:', riscoCookies);
+            try {
+                if (!err && res.statusCode == 302) {
+                    self.log('Got Cookie, save it');
+                    riscoCookies = res.headers['set-cookie'];
 
-                var post_data = {
-                    "SelectedSiteId": risco_siteId,
-                    "Pin": risco_pincode
-                };
+                    var post_data = {
+                        "SelectedSiteId": risco_siteId,
+                        "Pin": risco_pincode
+                    };
 
-
-                var options = {
-                    url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
-                    method: 'POST',
-                    headers: {
-                        'Cookie': riscoCookies,
-                        'Host': 'www.riscocloud.com',
-                        'Origin': 'https://www.riscocloud.com',
-                        'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index'
-                    },
-                    json: post_data
-                };
-                request(options, function (err, res, body) {
-                    if (!err && res.statusCode == 302) {
-                        self.log('LoggedIn !');
-                        resolve();
-                        return
-                    } else {
-                        var errMsg;
-                        if (res) {
-                            try {
-                                errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;
-                            } catch (error) {
-
+                    var options = {
+                        url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
+                        method: 'POST',
+                        headers: {
+                            'Cookie': riscoCookies,
+                            'Host': 'www.riscocloud.com',
+                            'Origin': 'https://www.riscocloud.com',
+                            'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index'
+                        },
+                        json: post_data
+                    };
+                    request(options, function (err, res, body) {
+                        try {
+                            if (!err && res.statusCode == 302) {
+                                self.log('LoggedIn !');
+                                resolve();
+                                return
+                            } else {
+                                self.log('login [step2] > err:', err);
+                                reject('');
+                                return
                             }
 
-                        } else {
-                            errMsg = 'error during connecting with RiscoCloud';
+
+                        } catch (error) {
+                            self.log('login [step2] > ', error);
+                            self.log('login [step2] > err', err);
+                            reject('');
+                            return
                         }
-
-                        self.log(errMsg);
-                        reject(errMsg);
-                    }
-                })
-
-            } else {
-                var errMsg;
-                if (res) {
-                    try {
-                        errMsg = 'error during login, HTTP ResponseCode ' + res.statusCode;
-                    } catch (error) {
-
-                    }
+                    })
 
                 } else {
-                    errMsg = 'error during connecting with RiscoCloud';
+                    self.log('login [step1] > error during connecting with RiscoCloud', err);
+                    reject('');
+                    return
                 }
-
-                self.log(errMsg);
-                reject(errMsg);
+            } catch (error) {
+                self.log('login [step1] > ', error);
+                self.log('login [step1] > err', err);
+                reject('');
+                return
             }
         })
-
     });
 }
 
@@ -256,12 +246,12 @@ function refreshState() {
                                 if (body.error == 3) {
                                     // Error. Try to login first
                                     //self.log('Error: 3. Try to login first.');
-                                    self.log('Body.error = 3 , relogin.');
+                                    //self.log('Body.error = 3 , relogin.');
                                     reject();
                                     return
                                 }
                             } catch (error) {
-                                self.log('Failed during GET GetCPState');
+                                //self.log('Failed during GET GetCPState');
                                 reject();
                                 return
                             }
@@ -276,6 +266,7 @@ function refreshState() {
                                 var armedZones = body.overview.partInfo.armedStr.split(' ');
                                 var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
 
+                                self.log('armedZones:', armedZones[0]);
                                 if (parseInt(armedZones[0]) > 0) {
                                     riscoState = 1; // Armed
                                 } else if (parseInt(partArmedZones[0]) > 0) {
@@ -297,13 +288,9 @@ function refreshState() {
                         } else
                             self.log('Error during request /WebUI/Overview/Get')
                         reject();
-                        return;
+                        return
                     });
-
-
                 }
-
-
             } else
                 reject();
         })
