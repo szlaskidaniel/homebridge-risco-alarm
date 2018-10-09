@@ -188,8 +188,6 @@ function refreshState() {
                 // Check error inside JSON
                 try {
                     if (body.error == 3) {
-                        // Error. Try to login first
-                        //self.log('Error: 3. Try to login first.');
                         self.log('Body.error = 3 , relogin.');
                         reject();
                         return
@@ -200,20 +198,7 @@ function refreshState() {
                     return
                 }
 
-                // Check if overview is present
-                /*
-                if (body.overview == undefined) {
-                    // No changes. Empty response
-                    resolve();
-                    return
-                }
-                */
-
-                //console.log('No error, status: ', res.statusCode);
-                //self.log('RiscoCloud ArmedState:', body.overview.partInfo.armedStr);
-                //self.log('RiscoCloud OngoingAlarm: ', body.OngoingAlarm);
-                //self.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
-
+                
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
@@ -244,24 +229,21 @@ function refreshState() {
                             // Check error inside JSON
                             try {
                                 if (body.error == 3) {
-                                    // Error. Try to login first
-                                    //self.log('Error: 3. Try to login first.');
-                                    //self.log('Body.error = 3 , relogin.');
                                     reject();
                                     return
                                 }
                             } catch (error) {
-                                //self.log('Failed during GET GetCPState');
+                                self.log('Failed during GET GetCPState');
                                 reject();
                                 return
                             }
-
+                            /* This should never take place
                             if (body.overview == undefined) {
                                 // No changes. Empty response
                                 resolve();
                                 return
                             }
-
+                            */
                             try {
                                 var armedZones = body.overview.partInfo.armedStr.split(' ');
                                 var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
@@ -280,15 +262,16 @@ function refreshState() {
 
 
                             } catch (error) {
-                                self.log('Failed during parse arm zones', error);
+                                self.log('Failed during parse arm / partArmed zones', error);
                                 reject();
                                 return
                             }
 
-                        } else
+                        } else {
                             self.log('Error during request /WebUI/Overview/Get')
-                        reject();
-                        return
+                            reject();
+                            return
+                        }
                     });
                 }
             } else
