@@ -41,7 +41,7 @@ function login() {
         request(options, function (err, res, body) {
             try {
                 if (!err && res.statusCode == 302) {
-                    self.log('Got Cookie, save it');
+                    //self.log('Got Cookie, save it');
                     riscoCookies = res.headers['set-cookie'];
 
                     var post_data = {
@@ -68,6 +68,7 @@ function login() {
                                 return
                             } else {
                                 self.log('login [step2] > err:', err);
+                                self.log(res);
                                 reject('');
                                 return
                             }
@@ -83,12 +84,14 @@ function login() {
 
                 } else {
                     self.log('login [step1] > error during connecting with RiscoCloud', err);
+                    self.log(res);
                     reject('');
                     return
                 }
             } catch (error) {
                 self.log('login [step1] > ', error);
                 self.log('login [step1] > err', err);
+                self.log(res);
                 reject('');
                 return
             }
@@ -167,7 +170,6 @@ function getState() {
 
 function refreshState() {
 
-    //self.log('Risco refreshState');
     return new Promise(function (resolve, reject) {
 
         var post_data = {};
@@ -188,7 +190,6 @@ function refreshState() {
                 // Check error inside JSON
                 try {
                     if (body.error == 3) {
-                        self.log('Body.error = 3 , relogin.');
                         reject();
                         return
                     }
@@ -198,7 +199,7 @@ function refreshState() {
                     return
                 }
 
-                
+
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
@@ -211,6 +212,37 @@ function refreshState() {
                 } else {
                     // Try different GET Method
 
+                    if (body.overview == undefined) {
+                        self.log('No changes');
+                        resolve();
+                        return
+                    }
+
+                    try {
+                        var armedZones = body.overview.partInfo.armedStr.split(' ');
+                        var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
+
+                        //self.log('armedZones:', armedZones[0]);
+                        
+                        if (parseInt(armedZones[0]) > 0) {
+                            riscoState = 1; // Armed
+                        } else if (parseInt(partArmedZones[0]) > 0) {
+                            riscoState = 2; // Partially Armed
+                        } else {
+                            riscoState = 3; // Disarmed
+                        }
+
+                        resolve(riscoState);
+                        return
+
+
+                    } catch (error) {
+                        self.log('Failed during parse arm / partArmed zones', error);
+                        reject();
+                        return
+                    }
+
+                    /*
                     var post_data = {};
 
                     var options = {
@@ -223,7 +255,7 @@ function refreshState() {
                         },
                         json: post_data
                     };
-
+                    
                     request(options, function (err, res, body) {
                         if (!err) {
                             // Check error inside JSON
@@ -237,18 +269,13 @@ function refreshState() {
                                 reject();
                                 return
                             }
-                            /* This should never take place
-                            if (body.overview == undefined) {
-                                // No changes. Empty response
-                                resolve();
-                                return
-                            }
-                            */
+                            
                             try {
                                 var armedZones = body.overview.partInfo.armedStr.split(' ');
                                 var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
 
-                                //self.log('armedZones:', armedZones[0]);
+                                self.log('armedZones:', armedZones[0]);
+                                self.log('partarmedZones:', partArmedZones[0]);
                                 if (parseInt(armedZones[0]) > 0) {
                                     riscoState = 1; // Armed
                                 } else if (parseInt(partArmedZones[0]) > 0) {
@@ -272,10 +299,16 @@ function refreshState() {
                             reject();
                             return
                         }
+                       
+
                     });
+                    */
+
                 }
-            } else
+            } else {
+                self.log('Error during GetCPState');
                 reject();
+            }
         })
     })
 }
