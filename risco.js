@@ -7,6 +7,7 @@ var risco_password;
 var risco_pincode;
 var risco_siteId;
 var self;
+var req_counter;
 
 
 function init(aUser, aPassword, aPIN, aSiteId, context) {
@@ -15,13 +16,13 @@ function init(aUser, aPassword, aPIN, aSiteId, context) {
     risco_pincode = aPIN;
     risco_siteId = aSiteId;
     self = context;
-
+    req_counter = 0;
 
 }
 
 function login() {
     return new Promise(function (resolve, reject) {
-        self.log('login [step1] to RiscoCloud first stage...');
+        //self.log('login [step1] to RiscoCloud first stage...');
 
         var post_data = {
             "username": risco_username,
@@ -63,7 +64,7 @@ function login() {
                     request(options, function (err, res, body) {
                         try {
                             if (!err && res.statusCode == 302) {
-                                self.log('login [step2] > LoggedIn !');
+                                self.log('LoggedIn !');
                                 resolve();
                                 return
                             } else {
@@ -127,7 +128,7 @@ function getState() {
                         return
                     }
                 } catch (error) {
-                    console.log('Failed to read body in risco response');
+                    self.log(error);
                     reject();
                     return
                 }
@@ -155,15 +156,18 @@ function getState() {
                             riscoState = 3; // Disarmed
                         }
                     } catch (error) {
+                        self.log(error);
                         reject();
+                        return
                     }
                 }
 
                 resolve(riscoState);
-            } else
+            } else {
                 self.log('error during parse request', err);
-            reject();
-            return
+                reject();
+                return
+            }
         });
     })
 }
@@ -171,11 +175,23 @@ function getState() {
 function refreshState() {
 
     return new Promise(function (resolve, reject) {
+        var alive_url
+
+        if (req_counter == 0) {
+            alive_url = 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState?userIsAlive=true';
+        } else
+            alive_url = 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState';
+
+        req_counter++;
+        if (req_counter > 10) {
+            alive_url = 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState?userIsAlive=true';
+            req_counter = 0;
+        }
 
         var post_data = {};
 
         var options = {
-            url: 'https://www.riscocloud.com/ELAS/WebUI/Security/GetCPState',
+            url: alive_url,
             method: 'POST',
             headers: {
                 "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
@@ -199,7 +215,6 @@ function refreshState() {
                     return
                 }
 
-
                 var riscoState;
                 // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
@@ -213,7 +228,7 @@ function refreshState() {
                     // Try different GET Method
 
                     if (body.overview == undefined) {
-                        self.log('No changes');
+                        //self.log('No changes');
                         resolve();
                         return
                     }
@@ -223,7 +238,7 @@ function refreshState() {
                         var partArmedZones = body.overview.partInfo.partarmedStr.split(' ');
 
                         //self.log('armedZones:', armedZones[0]);
-                        
+
                         if (parseInt(armedZones[0]) > 0) {
                             riscoState = 1; // Armed
                         } else if (parseInt(partArmedZones[0]) > 0) {

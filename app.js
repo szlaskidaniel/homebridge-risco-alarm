@@ -84,25 +84,16 @@ function RiscoSecuritySystemAccessory(log, config) {
                         self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
                         self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
                         riscoCurrentState = state;
-                
-                
-
             }
-
-
         });
 
         emitter.on("err", function (err) {
             self.log("Polling failed, error was %s", err);
         });
     }
-
 }
 
-
-
 RiscoSecuritySystemAccessory.prototype = {
-    
 
     setTargetState: function (state, callback) {
         var self = this;
@@ -232,7 +223,7 @@ RiscoSecuritySystemAccessory.prototype = {
             //self.log('Risco state: ', resp);
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 if (resp != riscoCurrentState) {
-                    self.log('Double check received state: ', translateState(resp));
+                    //self.log('Double check received state: ', translateState(resp));
                     
                     risco.login().then(function (resp) {
                         risco.getState().then(function (resp) {
@@ -264,7 +255,7 @@ RiscoSecuritySystemAccessory.prototype = {
             risco.login().then(function (resp) {
                 risco.getState().then(function (resp) {
                     // Worked.
-                    self.log('GetState success', resp);
+                    //self.log('GetState success', resp);
                     if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                         riscoCurrentState = resp;
                         callback(null, resp);
