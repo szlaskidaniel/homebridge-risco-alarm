@@ -20,6 +20,13 @@ function init(aUser, aPassword, aPIN, aSiteId, context) {
 
 }
 
+function extractError(aBody) {
+    var serverInfo_begin = aBody.indexOf("<span class=\"infoServer\">");
+    var serverInfo_end = aBody.indexOf("</span>", serverInfo_begin);
+    return aBody.substring(serverInfo_begin + 26, serverInfo_end - 7);
+
+}
+
 function login() {
     return new Promise(function (resolve, reject) {
         //self.log('login [step1] to RiscoCloud first stage...');
@@ -27,7 +34,7 @@ function login() {
         var post_data = {
             "username": risco_username,
             "password": risco_password,
-            "code": risco_pincode,
+            //"code": risco_pincode,
             "strRedirectToEventUID": "",
             "langId": "en"
         };
@@ -68,31 +75,27 @@ function login() {
                                 resolve();
                                 return
                             } else {
-                                self.log('login [step2] > err:', err);
-                                self.log(res);
+                                self.log('Status Code: ', res.statusCode);
+                                //self.log('login [step2] > error:', extractError(body));
                                 reject('');
                                 return
                             }
 
-
                         } catch (error) {
-                            self.log('login [step2] > ', error);
-                            self.log('login [step2] > err', err);
+                            self.log(error);
                             reject('');
                             return
                         }
                     })
 
                 } else {
-                    self.log('login [step1] > error during connecting with RiscoCloud', err);
-                    self.log(res);
+                    self.log('Status Code: ', res.statusCode);
+                    self.log('login [step1] > error:', extractError(body));
                     reject('');
                     return
                 }
             } catch (error) {
-                self.log('login [step1] > ', error);
-                self.log('login [step1] > err', err);
-                self.log(res);
+                self.log(error);
                 reject('');
                 return
             }
@@ -164,7 +167,7 @@ function getState() {
 
                 resolve(riscoState);
             } else {
-                self.log('error during parse request', err);
+                self.log(err);
                 reject();
                 return
             }

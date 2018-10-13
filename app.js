@@ -16,7 +16,7 @@ module.exports = function (homebridge) {
 
 
 // Default Value
-var riscoCurrentState; // = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
+var riscoCurrentState;// = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
 
 function translateState(aState) {
 
@@ -146,12 +146,12 @@ RiscoSecuritySystemAccessory.prototype = {
 
                 }).catch(function (error) {
                     self.log(error)
-                    callback("error");
+                    callback(null, riscoCurrentState);
                 })
 
             }).catch(function (error) {
                 self.log(error);
-                callback("error");
+                callback(null, riscoCurrentState);
 
             });
         });
@@ -160,6 +160,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
     getState: function (callback) {
         var self = this;
+        self.log('getState');
         if (riscoCurrentState)
             riscoCurrentState = undefined;
 
@@ -173,6 +174,7 @@ RiscoSecuritySystemAccessory.prototype = {
                 }
 
             }).catch(function (error) {
+                self.log('Error from Login');
                 self.log(error);
                 callback("error");
             })
@@ -247,7 +249,7 @@ RiscoSecuritySystemAccessory.prototype = {
                 //callback(null, resp);
             } else {
                 // Return last known status
-                callback(null, riscoCurrentState)
+                callback(null, riscoCurrentState);
             }
 
         }).catch(function (error) {
@@ -263,13 +265,12 @@ RiscoSecuritySystemAccessory.prototype = {
 
                 }).catch(function (error) {
                     self.log('Get State Failed', error);
-                    callback("error");
+                    callback(null, riscoCurrentState);
                     return
-                })
-
+                });
             }).catch(function (error) {
                 self.log('Login failed', error);
-                callback("error");
+                callback(null, riscoCurrentState);
                 return
             });
 
