@@ -224,7 +224,7 @@ function refreshState() {
                 // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                 // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
                 //self.log(body);
-
+               
                 if (body.OngoingAlarm == true) {
                     riscoState = 4;
                 } else {
