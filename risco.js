@@ -377,9 +377,11 @@ function arm(aState, cmd) {
                         return
                     }
                 } catch (error) {
-
+                    self.log(error);
+                    reject();
+                    return
                 }
-                self.log('New Risco state set.');
+                self.log('Risco state updated');
                 resolve();
             } else {
                 var errMsg = 'Error ' + res.statusCode;

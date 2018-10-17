@@ -107,7 +107,7 @@ RiscoSecuritySystemAccessory.prototype = {
             case Characteristic.SecuritySystemTargetState.STAY_ARM:
                 // stayArm = 0
                 riscoArm = true;
-                cmd = self.armCmd;
+                cmd = self.disarmCmd;
                 break;
             case Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                 // stayArm = 2
@@ -137,7 +137,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
             risco.login().then(function (resp) {
                 //successful call
-                //self.log('Relogin success...');
+                self.log('Relogin success...continue to set new Risco Status');
 
                 risco.arm(riscoArm, cmd).then(function (resp) {
                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
@@ -152,10 +152,8 @@ RiscoSecuritySystemAccessory.prototype = {
             }).catch(function (error) {
                 self.log(error);
                 callback(null, riscoCurrentState);
-
             });
         });
-
     },
 
     getState: function (callback) {
