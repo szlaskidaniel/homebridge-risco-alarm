@@ -34,7 +34,6 @@ function login() {
         var post_data = {
             "username": risco_username,
             "password": risco_password,
-            //"code": risco_pincode,
             "strRedirectToEventUID": "",
             "langId": "en"
         };
@@ -71,7 +70,7 @@ function login() {
                     request(options, function (err, res, body) {
                         try {
                             if (!err && res.statusCode == 302) {
-                                self.log('LoggedIn !');
+                                //self.log('LoggedIn !');
                                 resolve();
                                 return
                             } else {
@@ -224,7 +223,7 @@ function refreshState() {
                 // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM:
                 // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
                 //self.log(body);
-               
+
                 if (body.OngoingAlarm == true) {
                     riscoState = 4;
                 } else {

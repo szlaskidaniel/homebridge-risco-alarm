@@ -60,7 +60,7 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.armCmd = config["armCommand"] || "armed";
     this.partialCommand = config["partialCommand"] || "partially";
     this.disarmCmd = config["disarmCommand"] || "disarmed";
-    this.riscoSiteId = config["riscoSiteId"]; 
+    this.riscoSiteId = config["riscoSiteId"];
 
     var self = this;
 
@@ -74,16 +74,16 @@ function RiscoSecuritySystemAccessory(log, config) {
                 done(err, result);
             });
         }, {
-            longpolling: true,
-            interval: self.pollInterval
-        });
+                longpolling: true,
+                interval: self.pollInterval
+            });
 
         emitter.on("longpoll", function (state) {
             if (state) {
                 // Get OnceMore time Current State:
-                        self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
-                        self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-                        riscoCurrentState = state;
+                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
+                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
+                riscoCurrentState = state;
             }
         });
 
@@ -185,7 +185,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
 
     getCurrentState: function (callback) {
-    
+
         var self = this;
 
         if (self.polling) {
@@ -224,7 +224,7 @@ RiscoSecuritySystemAccessory.prototype = {
             if (resp == 0 || resp == 1 || resp == 2 || resp == 3 || resp == 4) {
                 if (resp != riscoCurrentState) {
                     //self.log('Double check received state: ', translateState(resp));
-                    
+
                     risco.login().then(function (resp) {
                         risco.getState().then(function (resp) {
                             // Worked.
@@ -232,7 +232,7 @@ RiscoSecuritySystemAccessory.prototype = {
                                 riscoCurrentState = resp;
                                 callback(null, resp);
                             }
-        
+
                         }).catch(function (error) {
                             callback("error");
                         })
@@ -251,7 +251,7 @@ RiscoSecuritySystemAccessory.prototype = {
             }
 
         }).catch(function (error) {
-            self.log('Sesion expired, relogin...');
+            //self.log('Sesion expired, relogin...');
             risco.login().then(function (resp) {
                 risco.getState().then(function (resp) {
                     // Worked.
