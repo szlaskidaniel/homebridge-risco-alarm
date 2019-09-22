@@ -31,18 +31,18 @@ function login() {
     return new Promise(function (resolve, reject) {
         //self.log('login [step1] to RiscoCloud first stage...');
 
-        var post_data = {
-            "username": risco_username,
-            "password": risco_password,
-            "strRedirectToEventUID": "",
-            "langId": "en"
+        var post_data = post_data = 'username=' + risco_username + '&password=' + risco_password;
+
+        var header_data = {
+            'Content-Length': post_data.length,
+            'Content-type': 'application/x-www-form-urlencoded'
         };
 
         var options = {
             url: 'https://www.riscocloud.com/ELAS/WebUI/',
             method: 'POST',
-            headers: {},
-            json: post_data
+            headers: header_data,
+            body: post_data
         };
 
         request(options, function (err, res, body) {
@@ -51,10 +51,7 @@ function login() {
                     //self.log('Got Cookie, save it');
                     riscoCookies = res.headers['set-cookie'];
 
-                    var post_data = {
-                        "SelectedSiteId": risco_siteId,
-                        "Pin": risco_pincode
-                    };
+                    var post_data = 'SelectedSiteId=' + risco_siteId + '&Pin='+ risco_pincode;
 
                     var options = {
                         url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
@@ -63,9 +60,11 @@ function login() {
                             'Cookie': riscoCookies,
                             'Host': 'www.riscocloud.com',
                             'Origin': 'https://www.riscocloud.com',
-                            'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index'
+                            'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index',
+                            'Content-Length': post_data.length,
+                            'Content-type': 'application/x-www-form-urlencoded'
                         },
-                        json: post_data
+                        body: post_data
                     };
                     request(options, function (err, res, body) {
                         try {
@@ -349,21 +348,21 @@ function arm(aState, cmd) {
             targetPasscode = "------"
         }
 
-        var post_data = {
-            "type": targetType,
-            "passcode": targetPasscode,
-            "bypassZoneId": -1
+        var post_data = 'type=' + targetType + '&passcode=' + targetPasscode  + '&bypassZoneId=-1';
+
+        var header_data = {
+            "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
+            "Origin": "https://www.riscocloud.com",
+            "Cookie": riscoCookies,
+            'Content-Length': post_data.length,
+            'Content-type': 'application/x-www-form-urlencoded'
         };
 
         var options = {
             url: 'https://www.riscocloud.com/ELAS/WebUI/Security/ArmDisarm',
             method: 'POST',
-            headers: {
-                "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
-                "Origin": "https://www.riscocloud.com",
-                "Cookie": riscoCookies
-            },
-            json: post_data
+            headers: header_data,
+            body: post_data
         };
 
         request(options, function (err, res, body) {
