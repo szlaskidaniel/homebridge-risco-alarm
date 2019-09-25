@@ -1,5 +1,4 @@
 "use strict";
-
 var Service, Characteristic;
 var waitUntil = require('wait-until');
 var pollingtoevent = require("polling-to-event");
@@ -7,16 +6,11 @@ var pollingtoevent = require("polling-to-event");
 var pjson = require('./package.json');
 var risco = require('./risco');
 
-
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     homebridge.registerAccessory("homebridge-risco-alarm", "RiscoAlarm", RiscoSecuritySystemAccessory);
 }
-
-
-// Default Value
-var self.riscoCurrentState;// = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
 
 function translateState(aState) {
     // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM: => Partial Mode
