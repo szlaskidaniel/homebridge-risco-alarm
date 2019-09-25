@@ -16,13 +16,13 @@ module.exports = function (homebridge) {
 
 
 // Default Value
-var riscoCurrentState;// = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
+var self.riscoCurrentState;// = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
 
 function translateState(aState) {
-    // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM:
-    // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM:
-    // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM:
-    // 3 -  Characteristic.SecuritySystemTargetState.DISARM:
+    // 0 -  Characteristic.SecuritySystemTargetState.STAY_ARM: => Partial Mode
+    // 1 -  Characteristic.SecuritySystemTargetState.AWAY_ARM: => Full Armed Mode
+    // 2-   Characteristic.SecuritySystemTargetState.NIGHT_ARM: => Partial Mode
+    // 3 -  Characteristic.SecuritySystemTargetState.DISARM: => Really ?? Disarmed
     var translatedSate = "UNKNOWN";
 
     switch (aState) {
@@ -40,6 +40,7 @@ function translateState(aState) {
             break;
         case 4:
             translatedSate = "ALARM"
+            //translatedSate = "ALARM_TRIGGERED"
             break;
     };
 
@@ -56,34 +57,41 @@ function RiscoSecuritySystemAccessory(log, config) {
     this.riscoPIN = config["riscoPIN"];
     this.polling = config["polling"] || false;
     this.pollInterval = config["pollInterval"] || 30000;
-    this.homeCommand = config["homeCommand"] || "disarmed";
+    this.homeCommand = config["homeCommand"] || "partially";
     this.armCmd = config["armCommand"] || "armed";
     this.partialCommand = config["partialCommand"] || "partially";
     this.disarmCmd = config["disarmCommand"] || "disarmed";
     this.riscoSiteId = config["riscoSiteId"];
+    this.riscoPartId = config["riscoPartId"] || 0;
+    this.riscoPartMode = config["riscoPartMode"] || false;
+
+    this.long_event_name = 'long_' + (this.name.toLowerCase()).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ /g, '_');
+    // Default Value
+    this.riscoCurrentState;// = 3; // Do not set default. Looks like plugin get restarted after some time. Generates false alarms.
 
     var self = this;
 
-    risco.init(this.riscoUsername, this.riscoPassword, this.riscoPIN, this.riscoSiteId, this);
+    this.RiscoPanel = new risco.RiscoPanelSession(this.riscoUsername, this.riscoPassword, this.riscoPIN, this.riscoSiteId,  this.riscoPartMode, this.riscoPartId, this.log);
 
     // set up polling if requested
     if (self.polling) {
         self.log("Starting polling with an interval of %s ms", self.pollInterval);
-        var emitter = pollingtoevent(function (done) {
+        var emitter = new pollingtoevent(function (done) {
             self.getRefreshState(function (err, result) {
                 done(err, result);
             });
         }, {
+                longpollEventName: self.long_event_name,
                 longpolling: true,
                 interval: self.pollInterval
             });
 
-        emitter.on("longpoll", function (state) {
+        emitter.on(self.long_event_name, function (state) {
             if (state) {
                 // Get OnceMore time Current State:
                 self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
                 self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-                riscoCurrentState = state;
+                self.riscoCurrentState = state;
             }
         });
 
@@ -123,85 +131,84 @@ RiscoSecuritySystemAccessory.prototype = {
                 riscoArm = false
                 cmd = self.disarmCmd;
                 break;
-
         };
 
-        risco.arm(riscoArm, cmd).then(function (resp) {
+        self.RiscoPanel.arm(riscoArm, cmd).then(function (resp) {
             self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-            riscoCurrentState = state;
+            self.riscoCurrentState = state;
             callback(null, state);
         }).catch(function (error) {
             // Most propably user not logged in. Re-login
-            risco.login().then(function (resp) {
+            self.RiscoPanel.login().then(function (resp) {
                 //successful call
                 self.log('Relogin success...continue to set new Risco Status');
-                risco.arm(riscoArm, cmd).then(function (resp) {
+                self.RiscoPanel.arm(riscoArm, cmd).then(function (resp) {
                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
-                    riscoCurrentState = state;
+                    self.riscoCurrentState = state;
                     callback(null, state);
                 }).catch(function (error) {
                     self.log(error)
-                    callback(null, riscoCurrentState);
-                })
+                    callback(null, self.riscoCurrentState);
+                });
             }).catch(function (error) {
                 self.log(error);
-                callback(null, riscoCurrentState);
+                callback(null, self.riscoCurrentState);
             });
         });
     },
 
     getState: function (callback) {
         var self = this;
-        risco.login().then(function (resp) {
-            risco.getCPState().then(function (resp) {
+        self.RiscoPanel.login().then(function (resp) {
+            self.RiscoPanel.getCPState().then(function (resp) {
                 // Worked.
                 if (resp == 'true') {
                     // Return Alarm is Going Off
                     self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
-                    riscoCurrentState = 4;
-                    callback(null, riscoCurrentState);
+                    self.riscoCurrentState = 4;
+                    callback(null, self.riscoCurrentState);
                 } else {
-                    risco.getState().then(function (resp) {
+                    self.RiscoPanel.getState().then(function (resp) {
                         // Worked.
                         if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
                             self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
-                            riscoCurrentState = resp;
-                            callback(null, resp);
+                            self.riscoCurrentState = resp;
+                            callback(null, self.riscoCurrentState);
                         }
                     }).catch(function (error) {
-						// self.log('Get State Failed', error);
-						callback(null, riscoCurrentState);
-                    })
+                        // self.log('Get State Failed', error);
+                        //callback(null, self.riscoCurrentState);
+                        callback("error");
+                    });
                 }
             }).catch(function (error) {
                 // self.log('Get CPState Failed', error);
-                callback(null, riscoCurrentState);
+                callback(null, self.riscoCurrentState);
                 return
             });
         }).catch(function (error) {
             self.log('Login failed', error);
-            callback(null, riscoCurrentState);
+            callback(null, self.riscoCurrentState);
             return
         });
     },
 
-
     getCurrentState: function (callback) {
         var self = this;
         if (self.polling) {
-            callback(null, riscoCurrentState);
+            callback(null, self.riscoCurrentState);
         } else {
             self.log('Getting current state - delayed...');
             waitUntil()
                 .interval(500)
                 .times(15)
                 .condition(function () {
-                    return (riscoCurrentState ? true : false);
+                    return (self.riscoCurrentState ? true : false);
                 })
                 .done(function (result) {
                     // do stuff
-                    self.log('Update current state to:', riscoCurrentState);
-                    callback(null, riscoCurrentState);
+                    self.log('Update current state to:', self.riscoCurrentState);
+                    callback(null, self.riscoCurrentState);
                 });
         }
     },
@@ -209,7 +216,7 @@ RiscoSecuritySystemAccessory.prototype = {
     getTargetState: function (callback) {
         var self = this;
         if (self.polling) {
-            callback(null, riscoCurrentState);
+            callback(null, self.riscoCurrentState);
         } else {
             self.log("Getting target state...");
             self.getState(callback);
@@ -218,46 +225,47 @@ RiscoSecuritySystemAccessory.prototype = {
 
     getRefreshState: function (callback) {
         var self = this;
-        risco.getCPState().then(function (resp) {
+        self.RiscoPanel.getState().then(function (resp) {
             if (resp == 'true') {
                 // Return Alarm is Going Off
-                riscoCurrentState = 4;
-                callback(null, riscoCurrentState);
+                self.riscoCurrentState = 4;
+                callback(null, self.riscoCurrentState);
             } else {
-                risco.getState().then(function (resp) {
+                self.RiscoPanel.getCPState().then(function (resp) {
                     // Worked.
                     if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
-                        riscoCurrentState = resp;
-                        callback(null, resp);
+                        self.riscoCurrentState = resp;
+                        callback(null, self.riscoCurrentState);
                     }
                 }).catch(function (error) {
-					// self.log('Get State Failed', error);
-					callback(null, riscoCurrentState);
-                })
+                    // self.log('Get State Failed', error);
+                    //callback(null, self.riscoCurrentState);
+                    callback('error');
+                });
             }
         }).catch(function (error) {
             self.log('Sesion expired, relogin...');
-            risco.login().then(function (resp) {
-                risco.getCPState().then(function (resp) {
+            self.RiscoPanel.login().then(function (resp) {
+                self.RiscoPanel.getCPState().then(function (resp) {
                     // Worked.
                     if (resp == 'true') {
-                        riscoCurrentState = 4;
-                        callback(null, riscoCurrentState);
+                        self.riscoCurrentState = 4;
+                        callback(null, self.riscoCurrentState);
                     } else {
                         // Return last known status
-                        callback(null, riscoCurrentState);
+                        callback(null, self.riscoCurrentState);
                     }
                 }).catch(function (error) {
                     // self.log('Get CPState Failed', error);
-                    callback(null, riscoCurrentState);
+                    callback(null, self.riscoCurrentState);
                     return
                 });
             }).catch(function (error) {
                 self.log('Login failed', error);
-                callback(null, riscoCurrentState);
+                callback(null, self.riscoCurrentState);
                 return
             });
-        })
+        });
     },
 
     identify: function (callback) {
@@ -272,12 +280,10 @@ RiscoSecuritySystemAccessory.prototype = {
             .getCharacteristic(Characteristic.SecuritySystemCurrentState)
             .on('get', this.getCurrentState.bind(this));
 
-
         this.securityService
             .getCharacteristic(Characteristic.SecuritySystemTargetState)
             .on('get', this.getTargetState.bind(this))
             .on('set', this.setTargetState.bind(this));
-
 
         this.infoService = new Service.AccessoryInformation();
         this.infoService
