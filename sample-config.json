@@ -11,6 +11,7 @@
             "riscoPIN": "",
             "armCommand": "armed",
             "partialCommand": "partially",
+            "homeCommand": "partially"
             "disarmCommand": "disarmed",
             "riscoPartMode": false,
             "riscoPartId": 0
