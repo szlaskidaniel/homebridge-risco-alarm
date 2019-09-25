@@ -31,7 +31,7 @@ function extractError(aBody) {
 function login() {
     return new Promise(function (resolve, reject) {
         // self.log('login [step1] to RiscoCloud first stage...');
-        var post_data = 'username=' + risco_username + '&password=' + risco_password;
+        var post_data = 'username=' + encodeURIComponent(risco_username) + '&password=' + encodeURIComponent(risco_password);
         var header_data = {
             'Content-Length': post_data.length,
             'Content-type': 'application/x-www-form-urlencoded'
