@@ -71,7 +71,6 @@ function RiscoSecuritySystemAccessory(log, config) {
         self.log("Starting polling with an interval of %s ms", self.pollInterval);
         var emitter = pollingtoevent(function (done) {
             self.getRefreshState(function (err, result) {
-                // self.log("POLLING RESULT:", result);
                 done(err, result);
             });
         }, {
@@ -85,7 +84,6 @@ function RiscoSecuritySystemAccessory(log, config) {
                 self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
                 self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
                 riscoCurrentState = state;
-                // self.log("LONGPOLLING RESULT:", state);
             }
         });
 
@@ -103,7 +101,6 @@ RiscoSecuritySystemAccessory.prototype = {
         self.log("Setting state to %s", translateState(state));
         var riscoArm;
         var cmd;
-
 
         switch (state) {
             case Characteristic.SecuritySystemTargetState.STAY_ARM:
@@ -158,8 +155,6 @@ RiscoSecuritySystemAccessory.prototype = {
         risco.login().then(function (resp) {
             risco.getCPState().then(function (resp) {
                 // Worked.
-                // self.log('GetCPState success', resp);
-                // self.log('GetCPState zoneCurrentState: ', riscoCurrentState);
                 if (resp == 'true') {
                     // Return Alarm is Going Off
                     self.log("Actual state is: (" + resp + ") -> ", translateState(resp));
@@ -174,11 +169,12 @@ RiscoSecuritySystemAccessory.prototype = {
                             callback(null, resp);
                         }
                     }).catch(function (error) {
-                        callback("error");
+						// self.log('Get State Failed', error);
+						callback(null, riscoCurrentState);
                     })
                 }
             }).catch(function (error) {
-                self.log('Get State Failed', error);
+                // self.log('Get CPState Failed', error);
                 callback(null, riscoCurrentState);
                 return
             });
@@ -192,10 +188,7 @@ RiscoSecuritySystemAccessory.prototype = {
 
     getCurrentState: function (callback) {
         var self = this;
-        // self.log('app.getCurrentState:');
-
         if (self.polling) {
-            // self.log('pollingCurrentState:', riscoCurrentState);
             callback(null, riscoCurrentState);
         } else {
             self.log('Getting current state - delayed...');
@@ -226,8 +219,6 @@ RiscoSecuritySystemAccessory.prototype = {
     getRefreshState: function (callback) {
         var self = this;
         risco.getCPState().then(function (resp) {
-            // self.log('GetCPState success', resp);
-            // self.log('GetCPState zoneCurrentState: ', riscoCurrentState);
             if (resp == 'true') {
                 // Return Alarm is Going Off
                 riscoCurrentState = 4;
@@ -237,11 +228,11 @@ RiscoSecuritySystemAccessory.prototype = {
                     // Worked.
                     if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
                         riscoCurrentState = resp;
-                        // self.log('Risco riscoCurrentState: ', riscoCurrentState);
                         callback(null, resp);
                     }
                 }).catch(function (error) {
-                    callback("error");
+					// self.log('Get State Failed', error);
+					callback(null, riscoCurrentState);
                 })
             }
         }).catch(function (error) {
@@ -257,7 +248,7 @@ RiscoSecuritySystemAccessory.prototype = {
                         callback(null, riscoCurrentState);
                     }
                 }).catch(function (error) {
-                    self.log('Get State Failed', error);
+                    // self.log('Get CPState Failed', error);
                     callback(null, riscoCurrentState);
                     return
                 });
