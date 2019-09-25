@@ -250,8 +250,7 @@ function arm(aState, cmd) {
             targetPasscode = "------"
         }
 
-        var post_data = 'type=' + targetType + '&passcode=' + targetPasscode  + '&bypassZoneId=-1';
-
+        var post_data = 'username=' + encodeURIComponent(risco_username) + '&password=' + encodeURIComponent(risco_password);
         var header_data = {
             "Referer": "https://www.riscocloud.com/ELAS/WebUI/MainPage/MainPage",
             "Origin": "https://www.riscocloud.com",
