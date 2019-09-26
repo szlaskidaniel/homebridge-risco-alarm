@@ -26,8 +26,8 @@ function RiscoPanelSession(aUser, aPassword, aPIN, aSiteId, aPartMode, aPartId, 
 RiscoPanelSession.prototype = {
     login: function() {
         var self = this;
-        if (!self.SessionLogged){
-            return new Promise(function (resolve, reject) {
+		return new Promise(function (resolve, reject) {
+            if (!self.SessionLogged){
             //this.log('login [step1] to RiscoCloud first stage...');
 
                 var post_data = 'username=' + self.risco_username + '&password=' + self.risco_password;
@@ -94,61 +94,55 @@ RiscoPanelSession.prototype = {
                         return
                     }
                 });
-            });
-        }
+            } else {
+				resolve();
+			}
+        });
     },
 
     logout: function() {
         var self = this;
-        return new Promise(function (resolve, reject) {
+        var options = {
+            url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/Logout',
+            method: 'GET',
+        };
 
-            var options = {
-                url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/Logout',
-                method: 'GET',
-            };
+        request(options, function (err, res, body) {
+            try {
+                if (!err && res.statusCode == 302) {
+                    //this.log('Got Cookie, save it');
+                    self.SessionLogged = false;
+                    self.riscoCookies = null;
 
-            request(options, function (err, res, body) {
-                try {
-                    if (!err && res.statusCode == 302) {
-                        //this.log('Got Cookie, save it');
-                        self.SessionLogged = false;
-                        self.riscoCookies = null;
-
-                        var options = {
-                            url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/LogoutUser',
-                            method: 'GET',
-                        };
-                        request(options, function (err, res, body) {
-                            try {
-                                if (!err && res.statusCode == 302) {
-                                    self.log('LoggedIn !');
-                                    resolve();
-                                    return
-                                } else {
-                                    self.log('Status Code: ', res.statusCode);
-                                    self.log('login [step2] > error:', extractError(body));
-                                    reject('');
-                                    return
-                                }
-                            } catch (error) {
-                                self.log(error);
-                                reject('');
+                    var options = {
+                        url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/LogoutUser',
+                        method: 'GET',
+                    };
+                    request(options, function (err, res, body) {
+                        try {
+                            if (!err && res.statusCode == 302) {
+                                self.log('LoggedIn !');
+                                return
+                            } else {
+                                self.log('Status Code: ', res.statusCode);
+                                self.log('login [step2] > error:', extractError(body));
                                 return
                             }
-                        });
-                    } else {
-                        self.log('Status Code: ', res.statusCode);
-                        self.log('login [step1] > error:', extractError(body));
-                        reject('');
-                        return
-                    }
-                } catch (error) {
-                    self.log('error when LogOut. Considere succes and session killed');
-                    self.log(error);
-                    reject('');
+                        } catch (error) {
+                            self.log(error);
+                            return
+                        }
+                    });
+                } else {
+                    self.log('Status Code: ', res.statusCode);
+                    self.log('login [step1] > error:', extractError(body));
                     return
                 }
-            });
+            } catch (error) {
+                self.log('error when LogOut. Considere succes and session killed');
+                self.log(error);
+                return
+            }
         });
     },
 
