@@ -112,7 +112,6 @@ RiscoPanelSession.prototype = {
                 if (!err && res.statusCode == 200) {
                     //this.log('Got Cookie, save it');
                     self.SessionLogged = false;
-                    self.riscoCookies = null;
 
                     var options = {
                         url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/LogoutUser',
@@ -339,43 +338,44 @@ RiscoPanelSession.prototype = {
                 json: {}
             };
 
-            request(options, function (err, res, body) {
-                if (!err) {
-                    // Check error inside JSON
-                    try {
-                        if (body.error == 3) {
+            if (self.SessionLogged) {
+                request(options, function (err, res, body) {
+                    if (!err) {
+                        // Check error inside JSON
+                        try {
+                            if (body.error == 3) {
+                                reject('');
+                                return
+                            }
+                            if (body.OngoingAlarm == true) {
+                                self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
+                                resolve(4);
+                                return
+                            }
+                            try {
+                                if (self.IsUserCodeExpired() != false) {
+                                    self.ValidateUserCode();
+                                }
+                                resolve(self.getState());
+                                return
+                            } catch (error) {
+                                self.log('Failed during parse arm / partArmed zones', error);
+                                reject('');
+                                return
+                            }
+                        } catch (error) {
+                            self.log('Failed during GET GetCPState');
                             reject('');
                             return
                         }
-                   } catch (error) {
-                        self.log('Failed during GET GetCPState');
+                    } else {
+                        self.log('Error during GetCPState');
                         reject('');
-                        return
                     }
-
-                    var riscoState;
-                    if (body.OngoingAlarm == true) {
-                        self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
-                        resolve(4);
-                        return
-                    }
-
-                    try {
-                        if (self.IsUserCodeExpired() != false) {
-                            self.ValidateUserCode();
-                        }
-                        resolve(self.getState());
-                        return
-                    } catch (error) {
-                        self.log('Failed during parse arm / partArmed zones', error);
-                        reject('');
-                        return
-                    }
-                } else {
-                    self.log('Error during GetCPState');
-                    reject('');
-                }
-            });
+                });
+            } else {
+                reject('');
+            }
         });
     },
 

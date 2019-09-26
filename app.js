@@ -43,7 +43,6 @@ function translateState(aState) {
 
 function RiscoSecuritySystemAccessory(log, config) {
 
-
     this.log = log;
     this.name = config["name"];
     this.riscoUsername = config["riscoUsername"];
@@ -247,37 +246,22 @@ RiscoSecuritySystemAccessory.prototype = {
 
     getRefreshState: function (callback) {
         var self = this;
-        self.RiscoPanel.getState().then(function (resp) {
-            if (resp == 'true') {
+        self.RiscoPanel.getCPState().then(function (resp) {
+            if (resp >= 0 || resp <= 4) {
                 // Return Alarm is Going Off
-                self.riscoCurrentState = 4;
-                callback(null, self.riscoCurrentState);
-            } else {
-                self.RiscoPanel.getCPState().then(function (resp) {
-                    // Worked.
-                    if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
-                        self.riscoCurrentState = resp;
-                        callback(null, self.riscoCurrentState);
-                    }
-                }).catch(function (error) {
-                    // self.log('Get State Failed', error);
-                    //callback(null, self.riscoCurrentState);
-                    callback('error');
-                });
+                self.riscoCurrentState = resp;
             }
+            callback(null, self.riscoCurrentState);
         }).catch(function (error) {
             self.log('Sesion expired, relogin...');
             self.RiscoPanel.logout();
             self.RiscoPanel.login().then(function (resp) {
                 self.RiscoPanel.getCPState().then(function (resp) {
                     // Worked.
-                    if (resp == 'true') {
-                        self.riscoCurrentState = 4;
-                        callback(null, self.riscoCurrentState);
-                    } else {
-                        // Return last known status
-                        callback(null, self.riscoCurrentState);
+                    if (resp >= 0 || resp <= 4) {
+                        self.riscoCurrentState = resp;
                     }
+                    callback(null, self.riscoCurrentState);
                 }).catch(function (error) {
                     self.log('Get CPState Failed', error);
                     callback(null, self.riscoCurrentState);
