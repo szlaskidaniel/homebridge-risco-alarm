@@ -34,7 +34,6 @@ function translateState(aState) {
             break;
         case 4:
             translatedSate = "ALARM"
-            //translatedSate = "ALARM_TRIGGERED"
             break;
     };
 
