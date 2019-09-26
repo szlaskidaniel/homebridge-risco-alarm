@@ -270,7 +270,6 @@ RiscoPanelSession.prototype = {
                         return
                     }
 
-                    //this.log('RiscoCloud ArmedState:' + body.overview.partInfo.armedStr + " / RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
                     var riscoState;
 
                     try {
@@ -348,7 +347,7 @@ RiscoPanelSession.prototype = {
                                 return
                             }
                             if (body.OngoingAlarm == true) {
-                                self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
+                                // self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
                                 resolve(4);
                                 return
                             }
@@ -385,14 +384,10 @@ RiscoPanelSession.prototype = {
 
             var targetType = cmd;
             var targetPasscode;
-            self.log('Arm/Disarm Func');
-            self.log('aState :' + aState);
-            self.log('cmd :'+ targetType);
 
             if (self.risco_part_mode) {
                 targetType = self.risco_part_id + ':' + targetType;
             }
-            self.log('cmd apres part mode :'+ targetType);
 
             if (aState) {
                 // ARM
@@ -420,7 +415,6 @@ RiscoPanelSession.prototype = {
             request(options, function (err, res, body) {
                 if (!err) {
                     try {
-                        self.log('Body Arm Cmd :' + JSON.stringify(body));
                         if (body.error == 3) {
                             // Error. Try to login first !
                             //this.log('Error: 3. Try to login first.');

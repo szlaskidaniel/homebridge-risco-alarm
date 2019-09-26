@@ -212,7 +212,7 @@ RiscoSecuritySystemAccessory.prototype = {
                                 callback(null, self.riscoCurrentState);
                             } else if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
                                     // Worked.
-                                    self.log('false get state Actual state is: (' + resp + ') -> ', translateState(resp));
+                                    self.log('get state Actual state is: (' + resp + ') -> ', translateState(resp));
                                     self.riscoCurrentState = resp;
                                     self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, self.riscoCurrentState);
                                     callback(null, self.riscoCurrentState);
