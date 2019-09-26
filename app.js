@@ -267,7 +267,7 @@ RiscoSecuritySystemAccessory.prototype = {
             }
         }).catch(function (error) {
             self.log('Sesion expired, relogin...');
-            self.logout();
+            self.RiscoPanel.logout();
             self.RiscoPanel.login().then(function (resp) {
                 self.RiscoPanel.getCPState().then(function (resp) {
                     // Worked.
