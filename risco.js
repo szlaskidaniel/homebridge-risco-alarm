@@ -109,7 +109,7 @@ RiscoPanelSession.prototype = {
 
         request(options, function (err, res, body) {
             try {
-                if (!err && res.statusCode == 302) {
+                if (!err && res.statusCode == 200) {
                     //this.log('Got Cookie, save it');
                     self.SessionLogged = false;
                     self.riscoCookies = null;
@@ -120,12 +120,12 @@ RiscoPanelSession.prototype = {
                     };
                     request(options, function (err, res, body) {
                         try {
-                            if (!err && res.statusCode == 302) {
+                            if (!err && res.statusCode == 200) {
                                 self.log('LoggedIn !');
                                 return
                             } else {
                                 self.log('Status Code: ', res.statusCode);
-                                self.log('login [step2] > error:', extractError(body));
+                                self.log('logout [step2] > error:', extractError(body));
                                 return
                             }
                         } catch (error) {
@@ -135,7 +135,7 @@ RiscoPanelSession.prototype = {
                     });
                 } else {
                     self.log('Status Code: ', res.statusCode);
-                    self.log('login [step1] > error:', extractError(body));
+                    self.log('logout [step1] > error:', extractError(body));
                     return
                 }
             } catch (error) {
