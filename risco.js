@@ -19,47 +19,104 @@ function RiscoPanelSession(aUser, aPassword, aPIN, aSiteId, aPartMode, aPartId, 
     this.log = aLog;
     this.req_counter = 0;
     this.riscoCookies;
+    this.SessionLogged = false;
 
 }
 
 RiscoPanelSession.prototype = {
     login: function() {
         var self = this;
-        return new Promise(function (resolve, reject) {
-        //this.log('login [step1] to RiscoCloud first stage...');
+        if (!self.SessionLogged){
+            return new Promise(function (resolve, reject) {
+            //this.log('login [step1] to RiscoCloud first stage...');
 
-            var post_data = 'username=' + self.risco_username + '&password=' + self.risco_password;
+                var post_data = 'username=' + self.risco_username + '&password=' + self.risco_password;
+
+                var options = {
+                    url: 'https://www.riscocloud.com/ELAS/WebUI/',
+                    method: 'POST',
+                    headers: {
+                        'Content-Length': post_data.length,
+                        'Content-type': 'application/x-www-form-urlencoded'
+                        },
+                    body: post_data
+                };
+
+                request(options, function (err, res, body) {
+                    try {
+                        if (!err && res.statusCode == 302) {
+                            //this.log('Got Cookie, save it');
+                            self.riscoCookies = res.headers['set-cookie'];
+
+                            var post_data = 'SelectedSiteId=' + self.risco_siteId + '&Pin='+ self.risco_pincode;
+
+                            var options = {
+                                url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
+                                method: 'POST',
+                                headers: {
+                                    'Cookie': self.riscoCookies,
+                                    'Host': 'www.riscocloud.com',
+                                    'Origin': 'https://www.riscocloud.com',
+                                    'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index',
+                                    'Content-Length': post_data.length,
+                                    'Content-type': 'application/x-www-form-urlencoded'
+                                },
+                                body: post_data
+                            };
+                            request(options, function (err, res, body) {
+                                try {
+                                    if (!err && res.statusCode == 302) {
+                                        self.log('LoggedIn !');
+                                        self.SessionLogged = true;
+                                        resolve();
+                                        return
+                                    } else {
+                                        self.log('Status Code: ', res.statusCode);
+                                        self.log('login [step2] > error:', extractError(body));
+                                        reject('');
+                                        return
+                                    }
+                                } catch (error) {
+                                    self.log(error);
+                                    reject('');
+                                    return
+                                }
+                            });
+                        } else {
+                            self.log('Status Code: ', res.statusCode);
+                            self.log('login [step1] > error:', extractError(body));
+                            reject('');
+                            return
+                        }
+                    } catch (error) {
+                        self.log(error);
+                        reject('');
+                        return
+                    }
+                });
+            });
+        }
+    },
+
+    logout: function() {
+        var self = this;
+        return new Promise(function (resolve, reject) {
 
             var options = {
-                url: 'https://www.riscocloud.com/ELAS/WebUI/',
-                method: 'POST',
-                headers: {
-                    'Content-Length': post_data.length,
-                    'Content-type': 'application/x-www-form-urlencoded'
-                    },
-                body: post_data
+                url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/Logout',
+                method: 'GET',
             };
 
             request(options, function (err, res, body) {
                 try {
                     if (!err && res.statusCode == 302) {
                         //this.log('Got Cookie, save it');
-                        self.riscoCookies = res.headers['set-cookie'];
-
-                        var post_data = 'SelectedSiteId=' + self.risco_siteId + '&Pin='+ self.risco_pincode;
+                        self.SessionLogged = false;
+                        self.riscoCookies = null;
 
                         var options = {
-                            url: 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin',
-                            method: 'POST',
-                            headers: {
-                                'Cookie': self.riscoCookies,
-                                'Host': 'www.riscocloud.com',
-                                'Origin': 'https://www.riscocloud.com',
-                                'Referer': 'https://www.riscocloud.com/ELAS/WebUI/SiteLogin/Index',
-                                'Content-Length': post_data.length,
-                                'Content-type': 'application/x-www-form-urlencoded'
-                            },
-                            body: post_data
+                            url: 'https://www.riscocloud.com/ELAS/WebUI/UserLogin/LogoutUser',
+                            method: 'GET',
                         };
                         request(options, function (err, res, body) {
                             try {
@@ -86,12 +143,17 @@ RiscoPanelSession.prototype = {
                         return
                     }
                 } catch (error) {
+                    self.log('error when LogOut. Considere succes and session killed');
                     self.log(error);
                     reject('');
                     return
                 }
             });
         });
+    },
+
+    IsLogged: function(){
+        return self.SessionLogged;
     },
 
     IsUserCodeExpired: function(){
@@ -308,7 +370,8 @@ RiscoPanelSession.prototype = {
                         if (self.IsUserCodeExpired() != false) {
                             self.ValidateUserCode();
                         }
-                        self.getState();
+                        resolve(self.getState());
+                        return
                     } catch (error) {
                         self.log('Failed during parse arm / partArmed zones', error);
                         reject(false);

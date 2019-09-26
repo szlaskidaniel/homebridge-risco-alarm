@@ -83,7 +83,7 @@ function RiscoSecuritySystemAccessory(log, config) {
         emitter.on(self.long_event_name, function (state) {
             if (state) {
                 // Get OnceMore time Current State:
-                self.log("New state detected: (" + state + ") -> " + translateState(state) + ". Notify!");
+                self.log('New state detected: (' + state + ') -> ' + translateState(state) + '. Notify!');
                 self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
                 self.riscoCurrentState = state;
             }
@@ -126,13 +126,14 @@ RiscoSecuritySystemAccessory.prototype = {
                 cmd = self.disarmCmd;
                 break;
         };
-
         self.RiscoPanel.arm(riscoArm, cmd).then(function (resp) {
             self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, state);
             self.riscoCurrentState = state;
-            callback(null, state);
+            callback(null, self.riscoCurrentState);
         }).catch(function (error) {
             // Most propably user not logged in. Re-login
+            // First Logout by security
+            self.RiscoPanel.logout()
             self.RiscoPanel.login().then(function (resp) {
                 //successful call
                 self.log('Relogin success...continue to set new Risco Status');
@@ -201,8 +202,35 @@ RiscoSecuritySystemAccessory.prototype = {
                 })
                 .done(function (result) {
                     // do stuff
-                    self.log('Update current state to:', self.riscoCurrentState);
-                    callback(null, self.riscoCurrentState);
+                    self.RiscoPanel.login().then(function (resp) {
+                        self.RiscoPanel.getState().then(function (resp) {
+                            // Worked.
+                            if (resp == 'true') {
+                                // Return Alarm is Going Off
+                                self.log('Actual state is: (' + resp + ') -> ', translateState(resp));
+                                self.riscoCurrentState = 4;
+                                self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, self.riscoCurrentState);
+                                callback(null, self.riscoCurrentState);
+                            } else if (resp == 0 || resp == 1 || resp == 2 || resp == 3) {
+                                    // Worked.
+                                    self.log('false get state Actual state is: (' + resp + ') -> ', translateState(resp));
+                                    self.riscoCurrentState = resp;
+                                    self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, self.riscoCurrentState);
+                                    callback(null, self.riscoCurrentState);
+                            }
+                        }).catch(function (error) {
+                            self.log('Get CPState Failed', error);
+                            self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, self.riscoCurrentState);
+                            callback(null, self.riscoCurrentState);
+                            return
+                        });
+                    }).catch(function (error) {
+                        self.log('Login failed', error);
+                        self.securityService.setCharacteristic(Characteristic.SecuritySystemCurrentState, self.riscoCurrentState);
+                        callback(null, self.riscoCurrentState);
+                        return
+                    });
+                    self.RiscoPanel.logout();
                 });
         }
     },
@@ -239,6 +267,7 @@ RiscoSecuritySystemAccessory.prototype = {
             }
         }).catch(function (error) {
             self.log('Sesion expired, relogin...');
+            self.logout();
             self.RiscoPanel.login().then(function (resp) {
                 self.RiscoPanel.getCPState().then(function (resp) {
                     // Worked.
@@ -250,7 +279,7 @@ RiscoSecuritySystemAccessory.prototype = {
                         callback(null, self.riscoCurrentState);
                     }
                 }).catch(function (error) {
-                    // self.log('Get CPState Failed', error);
+                    self.log('Get CPState Failed', error);
                     callback(null, self.riscoCurrentState);
                     return
                 });
@@ -263,7 +292,7 @@ RiscoSecuritySystemAccessory.prototype = {
     },
 
     identify: function (callback) {
-        this.log("Identify requested!");
+        this.log('Identify requested!');
         callback(); // success
     },
 
