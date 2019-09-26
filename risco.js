@@ -344,12 +344,12 @@ RiscoPanelSession.prototype = {
                     // Check error inside JSON
                     try {
                         if (body.error == 3) {
-                            reject(false);
+                            reject('');
                             return
                         }
                    } catch (error) {
                         self.log('Failed during GET GetCPState');
-                        reject(false);
+                        reject('');
                         return
                     }
 
@@ -368,12 +368,12 @@ RiscoPanelSession.prototype = {
                         return
                     } catch (error) {
                         self.log('Failed during parse arm / partArmed zones', error);
-                        reject(false);
+                        reject('');
                         return
                     }
                 } else {
                     self.log('Error during GetCPState');
-                    reject(false);
+                    reject('');
                 }
             });
         });
