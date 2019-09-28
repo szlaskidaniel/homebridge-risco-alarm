@@ -29,7 +29,11 @@ Configuration sample:
             "riscoSiteId": 12345,
             "riscoPIN": "",
             "armCommand": "armed",
-            "disarmCommand": "disarmed"
+            "partialCommand": "partially",
+            "homeCommand": "partially"
+            "disarmCommand": "disarmed",
+            "riscoPartMode": false,
+            "riscoPartId": 0            
         }
     ]
 ```
@@ -39,14 +43,16 @@ Fields:
 * "accessory": Must always be "RiscoAlarm" (required)
 * "name": Can be anything (used in logs)
 * "riscoUsername" , "riscoPassword": UserName and Password for you Web interface to RiscoCloud
+* "riscoSiteId": This is your siteId to login.
 * "riscoPIN": PIN Code used for arm/disarm
 * "polling": optionally poll for latest RiscoCloud status
 * "pollInterval": time in ms for polling
 * "armCommand": partitions that should be armed
+* "partialCommand": partitions that should be partially armed
+* "homeCommand": partitions that should be partially armed
 * "disarmCommand": partitions that should be disarmed
-
-New parameter:
-* "riscoSiteId": This is your siteId to login.
+* "riscoPartMode": false by default. Set to true if you want to manage one or more partitions independently.
+* "riscoPartId": 0 by default. Used when riscoPartMode is active. (0 => 1st Zone/Partition, 1 => 2nd Zone/Partition,...)
 
 To get your riscoSiteId, login to riscocloud via ChromeBrowser (first login screen), and before providing your PIN (second login page), display source of the page and find string: `<div class="site-name"` ... it will look like:
 
@@ -56,7 +62,7 @@ In that case "12345" is your siteId which should be placed in new config file.
 
 
 
-When set partitions for arm/disarm please use below schema:
+When set partitions for arm/disarm please use below schema (when "riscoPartMode" is set to false):
 For all partitions actions use default "armed" and "disarmed" , for single partition use
 "1:armed" and "1:disarmed"
 
