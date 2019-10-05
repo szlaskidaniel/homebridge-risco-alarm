@@ -3,6 +3,7 @@
         {
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
+            "debuglogging": 0,
             "polling": true,
             "pollInterval": 15000,
             "riscoUsername": "",
