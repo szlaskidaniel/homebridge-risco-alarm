@@ -22,6 +22,7 @@ Configuration sample:
         {
             "accessory": "RiscoAlarm",
             "name": "RiscoAlarm",
+            "debuglogging": 0,
             "polling": true,
             "pollInterval": 15000,
             "riscoUsername": "",
@@ -42,6 +43,7 @@ Fields:
 
 * "accessory": Must always be "RiscoAlarm" (required)
 * "name": Can be anything (used in logs)
+* "debuglogging" , 0: levels as follows 0 = state logging, 1 = some debug logging, 2 = all debug logging
 * "riscoUsername" , "riscoPassword": UserName and Password for you Web interface to RiscoCloud
 * "riscoSiteId": This is your siteId to login.
 * "riscoPIN": PIN Code used for arm/disarm

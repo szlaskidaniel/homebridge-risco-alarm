@@ -9,7 +9,7 @@ function extractError(aBody) {
     return aBody.substring(serverInfo_begin + 26, serverInfo_end - 7);
 }
 
-function RiscoPanelSession(aUser, aPassword, aPIN, aSiteId, aPartMode, aPartId, aLog) {
+function RiscoPanelSession(aUser, aPassword, aPIN, aSiteId, aPartMode, aPartId, aLog, adebuglogging) {
     this.risco_username = encodeURIComponent(aUser);
     this.risco_password = encodeURIComponent(aPassword);
     this.risco_pincode = aPIN;
@@ -17,6 +17,7 @@ function RiscoPanelSession(aUser, aPassword, aPIN, aSiteId, aPartMode, aPartId, 
     this.risco_part_mode = aPartMode;
     this.risco_part_id = aPartId;
     this.log = aLog;
+    this.debuglogging = adebuglogging;
     this.req_counter = 0;
     this.riscoCookies;
     this.SessionLogged = false;
@@ -28,7 +29,9 @@ RiscoPanelSession.prototype = {
         var self = this;
 		return new Promise(function (resolve, reject) {
             if (!self.SessionLogged){
-            //this.log('login [step1] to RiscoCloud first stage...');
+                if (self.debuglogging >= 2) {
+                    self.log('login [step1] to RiscoCloud first stage...');
+                }
 
                 var post_data = 'username=' + self.risco_username + '&password=' + self.risco_password;
 
@@ -45,7 +48,9 @@ RiscoPanelSession.prototype = {
                 request(options, function (err, res, body) {
                     try {
                         if (!err && res.statusCode == 302) {
-                            //this.log('Got Cookie, save it');
+                            if (self.debuglogging >= 2) {
+                                self.log('Got Cookie, save it');
+                            }
                             self.riscoCookies = res.headers['set-cookie'];
 
                             var post_data = 'SelectedSiteId=' + self.risco_siteId + '&Pin='+ self.risco_pincode;
@@ -66,13 +71,17 @@ RiscoPanelSession.prototype = {
                             request(options, function (err, res, body) {
                                 try {
                                     if (!err && res.statusCode == 302) {
-                                        self.log('LoggedIn !');
+                                        if (self.debuglogging >= 1) {
+                                            self.log('LoggedIn !');
+                                        }
                                         self.SessionLogged = true;
                                         resolve();
                                         return
                                     } else {
-                                        self.log('Status Code: ', res.statusCode);
-                                        self.log('login [step2] > error:', extractError(body));
+                                        if (self.debuglogging >= 1) {
+                                            self.log('Status Code: ', res.statusCode);
+                                            self.log('login [step2] > error:', extractError(body));
+                                        }
                                         reject('');
                                         return
                                     }
@@ -83,8 +92,10 @@ RiscoPanelSession.prototype = {
                                 }
                             });
                         } else {
-                            self.log('Status Code: ', res.statusCode);
-                            self.log('login [step1] > error:', extractError(body));
+                            if (self.debuglogging >= 1) {
+                                self.log('Status Code: ', res.statusCode);
+                                self.log('login [step1] > error:', extractError(body));
+                            }
                             reject('');
                             return
                         }
@@ -110,7 +121,9 @@ RiscoPanelSession.prototype = {
         request(options, function (err, res, body) {
             try {
                 if (!err && res.statusCode == 200) {
-                    //this.log('Got Cookie, save it');
+                    if (self.debuglogging >= 2) {
+                        self.log('Got Cookie, save it');
+                    }
                     self.SessionLogged = false;
 
                     var options = {
@@ -120,26 +133,36 @@ RiscoPanelSession.prototype = {
                     request(options, function (err, res, body) {
                         try {
                             if (!err && res.statusCode == 200) {
-                                self.log('LoggedIn !');
+                                if (self.debuglogging >= 1) {
+                                    self.log('LoggedIn !');
+                                }
                                 return
                             } else {
-                                self.log('Status Code: ', res.statusCode);
-                                self.log('logout [step2] > error:', extractError(body));
+                                if (self.debuglogging >= 1) {
+                                    self.log('Status Code: ', res.statusCode);
+                                    self.log('logout [step2] > error:', extractError(body));
+                                }
                                 return
                             }
                         } catch (error) {
-                            self.log(error);
+                            if (self.debuglogging >= 1) {
+                                self.log(error);
+                            }
                             return
                         }
                     });
                 } else {
-                    self.log('Status Code: ', res.statusCode);
-                    self.log('logout [step1] > error:', extractError(body));
+                    if (self.debuglogging >= 1) {
+                        self.log('Status Code: ', res.statusCode);
+                        self.log('logout [step1] > error:', extractError(body));
+                    }
                     return
                 }
             } catch (error) {
-                self.log('error when LogOut. Considere succes and session killed');
-                self.log(error);
+                if (self.debuglogging >= 1) {
+                    self.log('error when LogOut. Considere succes and session killed');
+                    self.log(error);
+                }
                 return
             }
         });
@@ -175,12 +198,16 @@ RiscoPanelSession.prototype = {
                             return
                         }
                     } else {
-                        self.log('Status Code: ', res.statusCode);
+                        if (self.debuglogging >= 1) {
+                            self.log('Status Code: ', res.statusCode);
+                        }
                         reject(null);
                         return
                     }
                 } catch (error) {
-                    self.log(error);
+                    if (self.debuglogging >= 1) {
+                        self.log(error);
+                    }
                     reject(null);
                     return
                 }
@@ -209,7 +236,9 @@ RiscoPanelSession.prototype = {
                 try {
                     if (!err && res.statusCode == 200) {
                         if (body.error == 14) {
-                            self.log('PinCode Error');
+                            if (self.debuglogging >= 1) {
+                                self.log('PinCode Error');
+                            }
                             reject(false);
                             return
                         } else {
@@ -217,12 +246,16 @@ RiscoPanelSession.prototype = {
                             return
                         }
                     } else {
-                        self.log('Status Code: ', res.statusCode);
+                        if (self.debuglogging >= 1) {
+                            self.log('Status Code: ', res.statusCode);
+                        }
                         reject(false);
                         return
                     }
                 } catch (error) {
-                    self.log(error);
+                    if (self.debuglogging >= 1) {
+                        self.log(error);
+                    }
                     reject('');
                     return
                 }
@@ -258,14 +291,20 @@ RiscoPanelSession.prototype = {
                     // Check error inside JSON
                     try {
                         if (body.error == 3) {
-                            self.log('error reject');
-                            // Error. Try to login first
-                            //this.log('Error: 3. Try to login first.');
+                            if (self.debuglogging >= 1) {
+                                self.log('error reject');
+                            }
+                            if (self.debuglogging >= 2) {
+                                // Error. Try to login first
+                                self.log('Error: 3. Try to login first.');
+                            }
                             reject();
                             return
                         }
                     } catch (error) {
-                        self.log(error);
+                        if (self.debuglogging >= 1) {
+                            self.log(error);
+                        }
                         reject();
                         return
                     }
@@ -300,14 +339,18 @@ RiscoPanelSession.prototype = {
                             }
                         }
                     } catch (error) {
-                        self.log(error);
+                        if (self.debuglogging >= 1) {
+                            self.log(error);
+                        }
                         reject();
                         return
                     }
                     resolve(riscoState);
                     return
                 } else {
-                    self.log(err);
+                    if (self.debuglogging >= 1) {
+                        self.log(err);
+                    }
                     reject();
                     return
                 }
@@ -347,7 +390,9 @@ RiscoPanelSession.prototype = {
                                 return
                             }
                             if (body.OngoingAlarm == true) {
-                                // self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
+                                if (self.debuglogging >= 1) {
+                                    self.log("RiscoCloud OngoingAlarm: " + body.OngoingAlarm );
+                                }
                                 resolve(4);
                                 return
                             }
@@ -358,17 +403,23 @@ RiscoPanelSession.prototype = {
                                 resolve(self.getState());
                                 return
                             } catch (error) {
-                                self.log('Failed during parse arm / partArmed zones', error);
+                                if (self.debuglogging >= 1) {
+                                    self.log('Failed during parse arm / partArmed zones', error);
+                                }
                                 reject('');
                                 return
                             }
                         } catch (error) {
-                            self.log('Failed during GET GetCPState');
+                            if (self.debuglogging >= 1) {
+                                self.log('Failed during GET GetCPState');
+                            }
                             reject('');
                             return
                         }
                     } else {
-                        self.log('Error during GetCPState');
+                        if (self.debuglogging >= 1) {
+                            self.log('Error during GetCPState');
+                        }
                         reject('');
                     }
                 });
@@ -417,20 +468,28 @@ RiscoPanelSession.prototype = {
                     try {
                         if (body.error == 3) {
                             // Error. Try to login first !
-                            //this.log('Error: 3. Try to login first.');
+                            if (self.debuglogging >= 2) {
+                                self.log('Error: 3. Try to login first.');
+                            }
                             reject();
                             return
                         }
                     } catch (error) {
-                        self.log(error);
+                        if (self.debuglogging >= 1) {
+                            self.log(error);
+                        }
                         reject();
                         return
                     }
-                    self.log('Risco state updated');
+                    if (self.debuglogging >= 1) {
+                        self.log('Risco state updated');
+                    }
                     resolve();
                 } else {
                     var errMsg = 'Error ' + res.statusCode;
-                    self.log(errMsg);
+                    if (self.debuglogging >= 1) {
+                        self.log(errMsg);
+                    }
                     reject(errMsg);
                 }
             });
