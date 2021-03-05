@@ -1,14 +1,14 @@
-# no longer maintained #
-I'm glad that this code helped a lot of other people to sync their not-homekit devices with HomeKit platfrom. Unfortunatelly for a time being I need to drop support of this code. You can still Fork it to your repos and based on it fix/adapt it to the current requirements.
-Cheers!
-
 Code was removed from Homebridge, now runs as pure nodeJS standalone service
 https://github.com/szlaskidaniel/risco-service
 This way, it can be re-used with any other 3rd party automation Tool
 
+# this version is longer maintained #
+I'm glad that this code helped a lot of other people to sync their not-homekit devices with HomeKit platfrom. Unfortunatelly for a time being I need to drop support of this code. You can still Fork it to your repos and based on it fix/adapt it to the current requirements.
+Cheers!
 
 
-#About
+
+# About
 This is plugin that integrate Homebridge with Risco Cloud Alarm Security System.
 Integration works only when proper Ethernet module is added to your Risco Unit and you are able to arm & disarm your system via https://www.riscocloud.com/ELAS/WebUI.
 
