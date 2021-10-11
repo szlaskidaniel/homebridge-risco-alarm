@@ -80,3 +80,9 @@ For all partitions actions use default "armed" and "disarmed" , for single parti
 "1:armed" and "1:disarmed"
 
 
+# Thank you
+
+If you like it / use it or it solved any of yours issues - any BTC donation will be great.
+My BTC Wallet: 3PZ4WNZq3S8BGcuxz1HC1zByuD6GR84hZQ
+
+<img width="218" alt="Zrzut ekranu 2021-10-11 o 09 33 01" src="https://user-images.githubusercontent.com/3016639/136750355-a41d4b2a-864c-442d-bd1a-c44f6ac58c80.png">
