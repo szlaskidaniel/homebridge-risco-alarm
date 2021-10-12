@@ -81,8 +81,10 @@ For all partitions actions use default "armed" and "disarmed" , for single parti
 
 
 # Thank you
+If you like it, any BTC donation will be great. My BTC Wallets (Coinbase):
 
-If you like it / use it or it solved any of yours issues - any BTC donation will be great.
-My BTC Wallet: 3PZ4WNZq3S8BGcuxz1HC1zByuD6GR84hZQ
+SegWit:
+![segWit](https://user-images.githubusercontent.com/3016639/136926965-9b8ba9a6-f5ae-4756-bb1e-47100f454c53.png)
 
-<img width="218" alt="Zrzut ekranu 2021-10-11 o 09 33 01" src="https://user-images.githubusercontent.com/3016639/136750355-a41d4b2a-864c-442d-bd1a-c44f6ac58c80.png">
+Legacy:
+![legacy](https://user-images.githubusercontent.com/3016639/136926997-63b61ce7-f2ce-44cb-9862-7adb2d220c0f.jpg)
